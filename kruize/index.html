@@ -70,27 +70,15 @@
             
             <li class="nav-item" data-level="1"><a href="#deployment-of-kruize-on-openshift-on-power" class="nav-link">Deployment of Kruize on Openshift on Power</a>
               <ul class="nav flex-column">
-            <li class="nav-item" data-level="3"><a href="#for-deploying-kruize-on-ibm-power-systems-refer-below-mentioned-steps" class="nav-link">For deploying kruize on IBM Power Systems refer below mentioned steps:</a>
+            <li class="nav-item" data-level="3"><a href="#introduction" class="nav-link">Introduction</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-level="3"><a href="#1-clone-the-kruize-github-repository" class="nav-link">1. Clone the kruize github repository :</a>
+            <li class="nav-item" data-level="3"><a href="#steps-for-deploying-kruize-on-ibm-power-systems" class="nav-link">Steps for deploying kruize on IBM Power Systems</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-level="3"><a href="#2-run-the-deploysh-script-to-start-deployment" class="nav-link">2. Run the deploy.sh script to start deployment :</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="3"><a href="#3-once-the-deployment-is-complete-create-a-route-in-order-to-access-the-kruize-api" class="nav-link">3. Once the deployment is complete, create a route in order to access the Kruize API .</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="3"><a href="#4-use-the-api-to-view-recommendations" class="nav-link">4. Use the API to view recommendations</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="3"><a href="#5-label-the-pod-to-monitor-your-application" class="nav-link">5. Label the pod to monitor your application:</a>
+            <li class="nav-item" data-level="3"><a href="#examples" class="nav-link">Examples</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -102,13 +90,14 @@
                     <div class="col-md-9" role="main">
 
 <h1 id="deployment-of-kruize-on-openshift-on-power">Deployment of Kruize on Openshift on Power</h1>
+<h3 id="introduction">Introduction</h3>
 <p>There were times when we used to have challenges in right sizing and optimizing containers which leads to these drawback - When applications were not sized appropriately in a k8s cluster, they either waste resources (oversized) or worse get terminated (undersized), either way could result in loss of revenue. Quick fix for this issue is <strong>Kruize</strong>. Kruize is an opensource tool which monitors application containers for resource usage. It has an analysis engine which predicts the right size for the containers that are being monitored and offers recommendations on the right CPU and Memory <code>request</code> and <code>limit</code> values. This helps IT admins to review and apply the recommendations knowing that their applications and even the cluster is optimally sized.</p>
 <p>The install steps that <a href="https://github.com/kruize/kruize/blob/master/docs/README.md#openshift">kruize</a> has generally worked on an OpenShift cluster on IBM Power Systems, but you might find below some tweaks we had to make.</p>
 <blockquote>
 <p><strong><em>NOTE:</em></strong> It is recommended to run the pods that are being monitored by kruize with no requests and limits set (or with very high limits set). This helps kruize to understand what is the real usage and hence can recommend the right set of values.</p>
 </blockquote>
-<h3 id="for-deploying-kruize-on-ibm-power-systems-refer-below-mentioned-steps">For deploying kruize on IBM Power Systems refer below mentioned steps:</h3>
-<h3 id="1-clone-the-kruize-github-repository">1. Clone the kruize github repository :</h3>
+<h3 id="steps-for-deploying-kruize-on-ibm-power-systems">Steps for deploying kruize on IBM Power Systems</h3>
+<p><strong>1. Clone the kruize github repository :</strong></p>
 <p><code>$ git clone https://github.com/kruize/kruize.git</code> </p>
 <p><code>$ cd kruize</code></p>
 <p>Now make the following changes in <strong>manifests/kruize.yaml_template</strong></p>
@@ -130,7 +119,7 @@
         metadata:
           labels:
 </code></pre>
-<h3 id="2-run-the-deploysh-script-to-start-deployment">2. Run the <code>deploy.sh</code> script to start deployment :</h3>
+<p><strong>2. Run the <code>deploy.sh</code> script to start deployment :</strong> </p>
 <p><code>$ ./deploy.sh -c openshift</code></p>
 <p><strong><em>Sample output:</em></strong></p>
 <pre><code class="language-text">###  Installing kruize for OpenShift
@@ -175,7 +164,7 @@ If log says execution format error then the image would be of some other archite
 If that's the case, you can build your own power(ppc64le) image by using <code>build.sh</code> script present <a href="https://github.com/kruize/kruize/blob/master/build.sh">here</a> 
 But before running <code>./build.sh</code> make sure you have docker installed on your system .</p>
 </blockquote>
-<h3 id="3-once-the-deployment-is-complete-create-a-route-in-order-to-access-the-kruize-api">3. Once the deployment is complete, create a route in order to access the Kruize API .</h3>
+<p><strong>3. Once the deployment is complete, create a route in order to access the Kruize API</strong></p>
 <ul>
 <li>$ cat route.yaml</li>
 </ul>
@@ -208,9 +197,9 @@ status:
 <p><em>NOTE:</em> Change the values of <code>host</code> and <code>routerCanonicalHostname</code> according to your cluster. </p>
 </blockquote>
 <ul>
-<li>Run: <code>oc create -f route.yaml</code> </li>
+<li>Run: <code>oc create -f route.yaml</code></li>
 </ul>
-<h3 id="4-use-the-api-to-view-recommendations">4. Use the API to view recommendations</h3>
+<p><strong>4. Use the API to view recommendations</strong> </p>
 <ul>
 <li>List recommendations for all applications by doing :</li>
 </ul>
@@ -310,12 +299,12 @@ status:
    }
 ]
 </code></pre>
-<h3 id="5-label-the-pod-to-monitor-your-application">5. Label the pod to monitor your application:</h3>
+<p><strong>5. Label the pod to monitor your application:</strong> </p>
 <p>Kruize by default monitors <code>openshift-monitoring</code> namespace. In order to monitor your application, run the following command:</p>
 <pre><code class="language-text">$ oc label pod -n &lt;NS&gt; &lt;POD_NAME&gt; app.kubernetes.io/name=&lt;ANY_NAME&gt;
 </code></pre>
 <p>NS stands for namespace name</p>
-<p><strong><em>Examples:</em></strong></p>
+<h3 id="examples">Examples</h3>
 <h5 id="1-to-monitor-deployment-for-an-acmeair-application">1. To monitor deployment for an acmeair application:</h5>
 <p>* [root@kruize-inf ~]# git clone https://github.ibm.com/powercloud/acmeair.git</p>
 <pre><code class="language-text">Cloning into 'acmeair'...
