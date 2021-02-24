@@ -131,33 +131,43 @@
           labels:
 </code></pre>
 <h3 id="2-run-the-deploysh-script-to-start-deployment">2. Run the <code>deploy.sh</code> script to start deployment :</h3>
-<p><code># ./deploy.sh -c openshift</code></p>
+<p><code>$ ./deploy.sh -c openshift</code></p>
 <p><strong><em>Sample output:</em></strong></p>
-<p><strong>Installing kruize for OpenShift</strong></p>
-<p>WARNING: This will create a Kruize ServiceMonitor object in the openshift-monitoring namespace</p>
-<p>WARNING: This is currently not recommended for production</p>
-<p>Create ServiceMonitor object and continue installation?(y/n)? yes</p>
-<p>Info: Checking pre requisites for OpenShift...done</p>
-<p>Info: Logging in to OpenShift cluster...</p>
-<p>Authentication required for https://api.kruize.cp.fyre.ibm.com:6443 (openshift)</p>
-<p>Username: kubeadmin</p>
-<p>Password: </p>
-<p>Login successful.</p>
-<p>You have access to 58 projects, the list has been suppressed. You can list all projects with 'oc projects'</p>
-<p>Using project "default".</p>
-<p>Info: Setting Prometheus URL as https://prometheus-k8s-openshift-monitoring.apps.kruize.cp.fyre.ibm.com</p>
-<p>Info: Deploying kruize yaml to OpenShift cluster</p>
-<p>Now using project "openshift-monitoring" on server "https://api.kruize.cp.fyre.ibm.com:6443".</p>
-<p>deployment.apps/kruize created</p>
-<p>service/kruize configured</p>
-<p>Info: Waiting for kruize to come up...</p>
-<hr />
-<p>kruize-6cfc8f4bbf-956vq                       1/1     ContainerCreating   0          11m</p>
-<p>kruize-f54c97d6f-78l7m                        1/1     Running             0          4s</p>
-<p>Info: kruize deploy succeeded: Running</p>
-<p>kruize-6cfc8f4bbf-956vq                       1/1     ContainerCreating   0          11m</p>
-<p>kruize-f54c97d6f-78l7m                        1/1     Running             0          4s</p>
-<hr />
+<pre><code class="language-text">###  Installing kruize for OpenShift
+
+
+WARNING: This will create a Kruize ServiceMonitor object in the openshift-monitoring namespace
+WARNING: This is currently not recommended for production
+
+Create ServiceMonitor object and continue installation?(y/n)? yes
+
+Info: Checking pre requisites for OpenShift...done
+Info: Logging in to OpenShift cluster...
+Authentication required for https://api.kruize.cp.fyre.ibm.com:6443 (openshift)
+Username: kubeadmin
+Password: 
+Login successful.
+
+You have access to 58 projects, the list has been suppressed. You can list all projects with 'oc projects'
+
+Using project &quot;default&quot;.
+
+
+Info: Setting Prometheus URL as https://prometheus-k8s-openshift-monitoring.apps.kruize.cp.fyre.ibm.com
+Info: Deploying kruize yaml to OpenShift cluster
+
+Now using project &quot;openshift-monitoring&quot; on server &quot;https://api.kruize.cp.fyre.ibm.com:6443&quot;.
+
+deployment.apps/kruize created
+service/kruize configured
+
+Info: Waiting for kruize to come up...
+kruize-6cfc8f4bbf-956vq                       1/1     ContainerCreating   0          11m
+kruize-f54c97d6f-78l7m                        1/1     Running             0          4s
+Info: kruize deploy succeeded: Running
+kruize-6cfc8f4bbf-956vq                       1/1     ContainerCreating   0          11m
+kruize-f54c97d6f-78l7m                        1/1     Running             0          4s
+</code></pre>
 <blockquote>
 <p><strong><em>NOTE:</em></strong>  If kruize pod is not in <em>Running</em> state then check the logs of the failed kruize pod by executing 
 <code>oc logs -f &lt;kruize_pod_name&gt;</code>
