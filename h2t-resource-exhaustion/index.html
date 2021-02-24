@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Resource Exhaustion - openshift-ppc64le</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="..">openshift-ppc64le</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Home(grown)</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../contrib/" class="nav-link">Contribute</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../actually-helped/" class="nav-link">External</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#resource-exhaustion" class="nav-link">Resource Exhaustion</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#introduction" class="nav-link">Introduction</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#how-to-verify-this-situation" class="nav-link">How to verify this situation</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#basics-of-scheduling-pods" class="nav-link">Basics of scheduling pods</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#pod-eviction" class="nav-link">Pod Eviction</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#signs-of-nodes-running-out-of-memory" class="nav-link">Signs of nodes running out of memory</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#when-does-oc-describe-node-show-memorypressuretrue" class="nav-link">When does oc describe node show MemoryPressure=true?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#ephemeral-storage" class="nav-link">Ephemeral storage</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#restart-count" class="nav-link">Restart count</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#details-about-resourse-allocation" class="nav-link">Details about resourse allocation</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#what-to-do-to-mitigate" class="nav-link">What to do to Mitigate</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="resource-exhaustion">Resource Exhaustion</h1>
+<h2 id="introduction">Introduction</h2>
+<p>As a developer or an Ops, you occasionally get into this situation where pods or API calls fail and resume working seemingly randomly.
+You might notice there are a lots of "Evicted" and/or "Pending" pods, or high restart counts on pods, or your <code>oc</code> commands take longer to respond or even fail sometimes, and everything seems to point to the system is busy, under heavy load too much stuff on it.
+This document explains how to verify, diagnose, and offer what could be done about this "resource exhaustion" 
+situation on an OpenShift cluster.</p>
+<h2 id="how-to-verify-this-situation">How to verify this situation</h2>
+<p>Resource exhaustion is the condition that happens when the resources required to execute an action are entirely or nearly expended, preventing that action from occurring.The most common outcome of resource exhaustion is denial of service.
+<code>oc adm top nodes</code> is one way to see how tight CPU and Memory resources are for the cluster nodes.</p>
+<h4 id="example-output-below">Example output below</h4>
+<p>You will get to know about resource exhaustion condition using this command</p>
+<pre><code class="language-text">$ oc adm top nodes
+NAME           CPU(cores)          CPU%               MEMORY(bytes)                MEMORY%\n
+node-1            297m              29%                4263Mi                        55%    
+node-0            55m               5%                 1201Mi                        15%    
+infra-1           85m               8%                 1319Mi                        17%    
+infra-0           182m              18%                2524Mi                        32%    
+master-0          178m              8%                 2584Mi                        16%    
+</code></pre>
+<p>Other indications that one could suspect of this situation are failing pods, especially in "Evicted" state.
+Use <code>oc get pods -A | egrep -v 'Completed|Running'</code> and see what and how many are failing. 
+Sometimes, "Pending" state could be attributed to resource exhaustion, as those pods are having hard time finding a free node to run on.</p>
+<h2 id="basics-of-scheduling-pods">Basics of scheduling pods</h2>
+<p>When you specify a Pod, you can optionally specify how much of each resource a Container needs. 
+The most common resources to specify are CPU and memory . 
+CPU is specified in units of Kubernetes CPUs, Memory is specified in units of bytes. 
+When you specify the resource request for Containers in a Pod, the scheduler uses this information to decide which node to place the Pod on. </p>
+<p>When you specify a resource limit for a Container, the kubelet enforces those limits so that the running container is not allowed to use more of that resource than the limit you set. 
+The kubelet also reserves at least the request amount of that system resource specifically for that container to use.</p>
+<p>For example, if you set a memory request of 256 MiB for a container, and that container is in a Pod scheduled to a Node with 8GiB of memory and no other Pods, then the container can try to use more RAM.</p>
+<p>If you set a memory limit of 4GiB for that Container, the kubelet (and container runtime) enforce the limit.
+The runtime prevents the container from using more than the configured resource limit.</p>
+<p>For example when a process in the container tries to consume more than the allowed amount of memory, the system kernel terminates the process that attempted the allocation, with an out of memory (OOM) error.
+In order to monitor this, you always have to look at the use of memory compared to the limit.
+Percentage of the node memory used by a pod is usually a bad indicator as it gives no indication on how close to the limit the memory usage is. 
+In Kubernetes, limits are applied to containers, not pods, so monitor the memory usage of a container vs. the limit of that container.
+<img width="1416" alt="Import dashboard from file or Grafana com" 
+src="https://478h5m1yrfsa3bbe262u7muv-wpengine.netdna-ssl.com/wp-content/uploads/image3-1.png"></p>
+<h2 id="pod-eviction">Pod Eviction</h2>
+<p>Pods could be evicted as part of kubelet's attempt to keep the node from going down completely. See sample messages below. 
+Example : </p>
+<pre><code class="language-text"> Reason :  Evicted
+ Warning : Evicted    125m  kubelet, worker-0.shivani4-9998.ocp-44.com  
+ The node had condition:        [DiskPressure].
+</code></pre>
+<pre><code class="language-text"> Reason :    Evicted
+ Warning : Evicted  126m  kubelet, worker-0.shivani4-9998.ocp-44.com  
+ The node was low on resource:   ephemeral-storage.
+ Container certified-operators was using 44156Ki,which exceeds its request of 0.
+</code></pre>
+<p>Kubernetes has a way of determining which pods to kill and evict in what order and trying to mitigate similar resource tightness in the future. 
+It's built around the idea of garbage collection and QoS (Quality of Service) classes.
+See these pages for more details;<br/><a href="https://sysdig.com/blog/kubernetes-pod-evicted/">https://sysdig.com/blog/kubernetes-pod-evicted/</a>
+<a href="https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/">https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/</a></p>
+<h2 id="signs-of-nodes-running-out-of-memory">Signs of nodes running out of memory</h2>
+<p>The kubelet can support the ability to trigger eviction decisions on the signals described below.
+The value of each signal is described in the description column based on the kubelet summary API.</p>
+<table>
+<thead>
+<tr>
+<th>Eviction Signal</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>memory.available</td>
+<td>memory.available := node.status.capacity[memory] - node.stats.memory.workingSet</td>
+</tr>
+<tr>
+<td>nodefs.available</td>
+<td>nodefs.available</td>
+</tr>
+<tr>
+<td>nodefs.inodesFree</td>
+<td>nodefs.inodesFree := node.stats.fs.inodesFree</td>
+</tr>
+<tr>
+<td>imagefs.available</td>
+<td>imagefs.available := node.stats.runtime.imagefs.available</td>
+</tr>
+<tr>
+<td>imagefs.inodesFree</td>
+<td>magefs.inodesFree := node.stats.runtime.imagefs.inodesFree</td>
+</tr>
+</tbody>
+</table>
+<p>This link explains further details about eviction signals and how to configure out of resource handling with kubelet.
+<a href="https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/#eviction-signals">https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/#eviction-signals</a></p>
+<h2 id="when-does-oc-describe-node-show-memorypressuretrue">When does oc describe node show MemoryPressure=true?</h2>
+<p>oc describe node show MemoryPressure=true when Kubelet has insufficient memory.
+When a node in a Kubernetes cluster is running out of memory or disk, it activates a flag signaling that it is under pressure.
+This blocks any new allocation in the node and starts the eviction process.At that moment, kubelet starts to reclaim resources, killing containers and declaring pods as failed until the resource usage is under the eviction threshold again.</p>
+<h2 id="ephemeral-storage">Ephemeral storage</h2>
+<p>"Ephemeral" means that there is no long-term guarantee about durability.
+Kubernetes supports two ways to configure local ephemeral storage on a node:</p>
+<ul>
+<li>Single file system </li>
+<li>Two file system</li>
+</ul>
+<h4 id="setting-requests-and-limits-for-local-ephemeral-storage">Setting requests and limits for local ephemeral storage</h4>
+<p>You can use ephemeral-storage for managing local ephemeral storage. Each Container of a Pod can specify one or more of the following:
+   1. spec.containers[].resources.limits.ephemeral-storage
+   2. spec.containers[].resources.requests.ephemeral-storage</p>
+<p>To know more in detail about ephemeral storage refer link provided below<br/>
+<a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#:~:text=Ephemeral">https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#:~:text=Ephemeral</a><br/>
+The kubelet supports different ways to measure Pod storage use:
+1. Periodic Scanning :<br/>
+The kubelet performs regular, schedules checks that scan each emptyDir volume, container log directory, and writeable container layer.The scan measures how much space is used.</p>
+<ol>
+<li>Filesystem project quota :<br/>
+Project quotas are an operating-system level feature for managing storage use on filesystems. With Kubernetes, you can enable project quotas for monitoring storage use. 
+Make sure that the filesystem backing the emptyDir volumes, on the nodeprovides project quota support. 
+For example, XFS and ext4fs offer project quotas.</li>
+</ol>
+<h2 id="restart-count">Restart count</h2>
+<p>Restart count represents the number of times the container inside a pod has been restarted, it is based on the number of dead containers that have not yet been removed. Note that this is calculated from dead containers. 
+command to get restart count  :   kubectl describe pod nginx | grep -i "Restart"</p>
+<h2 id="details-about-resourse-allocation">Details about resourse allocation</h2>
+<p>As mentioned earlier, a pod can specify how much system resources it needs ("request") and/or doesn't want to consume more than ("limit"). 
+Also, a namespace can impose defaults on all pods running in it if they don't explicitly specify their resource requests/limits. 
+Kubernetes has guided tasks that one can follow along to understand how these settings work:</p>
+<h4 id="cpu">CPU</h4>
+<p>To specify a CPU request and limit for a container,include following fields in the container resource manifest<br/>
+Example:</p>
+<pre><code class="language-text">resources:
+  limits:        
+    cpu: &quot;1&quot;     
+  requests: 
+    cpu: &quot;0.5&quot;
+</code></pre>
+<p>To know more in detail about allocation of cpu resources to containers and pods refer link provided below
+<a href="https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/">https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/</a></p>
+<h4 id="memory">Memory</h4>
+<p>To specify a Memory request and limit for a container, include following fields in the container resource manifest<br/>
+Example:</p>
+<pre><code class="language-text">resources:
+   limits:       
+     memory: &quot;200Mi&quot;    
+   requests:       
+     memory: &quot;100Mi&quot;
+</code></pre>
+<p>To know more in detail about allocation of memory resource to containers and pods refer link provided below
+<a href="https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/">https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/</a></p>
+<h4 id="namespace-defaults">Namespace defaults</h4>
+<p>If a Container is created in a namespace that has a default memory limit, and the Container does not specify its own memory limit, then the Container is assigned the default memory limit.<br/>
+To know more about configuring default memory requests and limits for a namespace refer link provided below
+<a href="https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-default-namespace/">https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-default-namespace/</a></p>
+<h4 id="at-node-level">At node level</h4>
+<p>One can also specify how much resource Kubernetes can use and how much OS/system keeps for its 
+stability. This helps avoid overcommitment and flapping. 
+You can control how much of a node resource is made available for scheduling in order to allow the scheduler to fully allocate a node and to prevent evictions
+This page describes how this all works in OpenShift clusters in more details:<br/> 
+<a href="https://docs.openshift.com/container-platform/4.5/nodes/nodes/nodes-nodes-resources-configuring.html">https://docs.openshift.com/container-platform/4.5/nodes/nodes/nodes-nodes-resources-configuring.html</a> <br/></p>
+<ul>
+<li>
+<p>Overcommitment:<br/> 
+  Scheduling is based on resources requested, while quota and hard limits refer to resource limits, which can 
+  be set higher than requested resources.
+  The difference between request and limit determines the level of overcommit .
+  The Cluster ResourceOverride Operator is an admission webhook that allows you to control the level of overcommit and manage container density across all the nodes in your cluster.<br/>
+  To know in detail about cluster resource override operator refer link provided below<br/>
+<a href="https://docs.openshift.com/container-platform/4.5/post_installation_configuration/node-tasks.html#nodes-cluster-overcommit-resource-requests_post-install-node-tasks">https://docs.openshift.com/container-platform/4.5/post_installation_configuration/node-tasks.html#nodes-cluster-overcommit-resource-requests_post-install-node-tasks</a><br/></p>
+</li>
+<li>
+<p>Flapping:<br/> 
+  If the node ready status has an altering behaviour , the node is flapping. 
+  Flapping indicates that is kubelet is not ready.
+  To know more in detail about causes of flapping , refer the link provided below<br/>
+  <a href="https://docs.sysdig.com/en/nodes-data.html">https://docs.sysdig.com/en/nodes-data.html</a></p>
+</li>
+</ul>
+<h2 id="what-to-do-to-mitigate">What to do to Mitigate</h2>
+<ul>
+<li>
+<p>The kubelet needs to preserve node stability when available compute resources are low. 
+  This is especially important when dealing with incompressible compute resources, such as memory or disk space.If such resources are exhausted, nodes become unstable.</p>
+</li>
+<li>
+<p>The kubelet can proactively monitor for and prevent total starvation of a compute resource. 
+  In those cases, the kubelet can reclaim the starved resource by proactively failing one or more Pods.
+  When the kubelet fails a Pod, it terminates all of its containers and transitions its PodPhase to Failed.
+  If the evicted Pod is managed by a Deployment, the Deployment will create another Pod to be scheduled 
+  by Kubernetes.</p>
+</li>
+<li>
+<p>To provide more reliable scheduling and minimize node resource overcommitment, each node can reserve a portion of its resources for use by all underlying node components. 
+  CPU and memory resources reserved for node components in OpenShift Container Platform are based on two node settings:</p>
+<ul>
+<li>Kube-reserved</li>
+<li>System-reserved</li>
+</ul>
+<p>If a flag is not set, it defaults to 0. If none of the flags are set, the allocated resource is set to the node’s capacity as it was before 
+   the  introduction of allocatable resources. 
+   For further reading on managing node resources see<br/>
+   <a href="https://docs.openshift.com/container-platform/4.5/nodes/nodes/nodes-nodes-resources-configuring.htm">https://docs.openshift.com/container-platform/4.5/nodes/nodes/nodes-nodes-resources-configuring.htm</a></p>
+</li>
+<li>
+<p>The scheduler attempts to optimize the compute resource use across all nodes in your cluster. 
+  It places Pods onto specific nodes, taking the Pods' compute resource requests and nodes' available capacity into consideration.
+  OpenShift Container Platform administrators can control the level of overcommit and manage container density on nodes. 
+  You can configure cluster-level overcommit using the Cluster Resource Override Operator.
+  To know in detail about cluster resource override operator see<br/>
+  <a href="https://docs.openshift.com/container-platform/4.5/nodes/clusters/nodes-cluster-overcommit.html">https://docs.openshift.com/container-platform/4.5/nodes/clusters/nodes-cluster-overcommit.html</a></p>
+</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>© Copyright IBM Corp. 2020, 2021</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

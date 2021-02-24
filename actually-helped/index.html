@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>External - openshift-ppc64le</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="..">openshift-ppc64le</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Home(grown)</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../contrib/" class="nav-link">Contribute</a>
+                            </li>
+                            <li class="navitem active">
+                                <a href="./" class="nav-link">External</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../contrib/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" class="nav-link disabled">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="2"><a href="#2021-02" class="nav-link">2021-02</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="2"><a href="#2021-01" class="nav-link">2021-01</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="2"><a href="#2020-10" class="nav-link">2020-10</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="2"><a href="#2020-09" class="nav-link">2020-09</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="2"><a href="#2020-08" class="nav-link">2020-08</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="2"><a href="#2020-06" class="nav-link">2020-06</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="2"><a href="#2020-02" class="nav-link">2020-02</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<p>Collection of issues we faced and external pages/links that actually helped resolve them;</p>
+<h2 id="2021-02">2021-02</h2>
+<ul>
+<li><code>image-registry</code> operator reporting Progressing, while Available and not Degraded, after starting with "EmptyDir" storage, switching to PVC (with <code>nfs-provisioner</code>), then deleting and recreating the provisioner Pod. The <code>cluster</code> config of <code>image-registry</code> ends up with 2 storage types, which it cannot support at this time (tested/verified with 4.6.13).<br />
+  To edit the config, use: <code>$ oc edit configs.imageregistry.operator.openshift.io</code><br />
+  =&gt; <a href="https://access.redhat.com/solutions/4516391">https://access.redhat.com/solutions/4516391</a></li>
+</ul>
+<h2 id="2021-01">2021-01</h2>
+<ul>
+<li>
+<p>4.6 node reporting <code>NotReady</code> after upgrade to 4.6.12, due to CRI-O failing to start up on one worker node (other nodes were fine).
+  The error seen in <code>journalctl</code> on the troubling node was like <code>Jan 21 16:00:48 worker1.ocp4.example.com bash[1881]: Error: readlink /var/lib/containers/storage/overlay/l/6MDZKPV63T&gt;</code><br />
+  Running <code># systemctl daemon-reload</code> was necessary before the storage wipe steps in the below doc.<br />
+  =&gt; <a href="https://access.redhat.com/solutions/5350721">https://access.redhat.com/solutions/5350721</a> (again, see <a href="#2020-10">2020-10</a>)</p>
+</li>
+<li>
+<p>OCS (OpenShift Container Storage) 4.6 install worked like a champ following this document.
+  =&gt; <a href="https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.6/html-single/monitoring_openshift_container_storage/index">https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage/4.6/html-single/monitoring_openshift_container_storage/index</a></p>
+</li>
+</ul>
+<h5 id="2020-10-26-46-ga">(2020-10-26 4.6 GA)</h5>
+<h2 id="2020-10">2020-10</h2>
+<ul>
+<li>
+<p>Pods failing to start on a particular node, often with <code>ImagePullBackOff</code> error, due to getting CRI-O ephemeral storage full<br />
+  =&gt; <a href="https://access.redhat.com/solutions/5350721">https://access.redhat.com/solutions/5350721</a></p>
+</li>
+<li>
+<p>How to troubleshoot ingress, routes, services, what objects to check, in what order (perhaps for likeliness/quicker resolution)<br />
+  =&gt; <a href="https://kubernetes.io/docs/tasks/debug-application-cluster/debug-service/">https://kubernetes.io/docs/tasks/debug-application-cluster/debug-service/</a></p>
+</li>
+<li>
+<p>4.5 disconnected cluster (ie. no direct access to Internet), normal upgrade fails, requiring "opting out Insights operator" and "mirroring image repository (again)." 
+  <code>oc adm upgrade</code> first checks if the cluster is currently healthy, and any problem with cluster operators (<code>oc get co</code>) blocks upgrade operation from proceeding. 
+  The Insights operator would be running but degraded because it cannot report status to Red Hat due to no Internet access, hence needs "opting out."
+  Then, the upgrade-to version images need to be mirrored to the internal repository, again, due to no Internet access.<br />
+  =&gt; <a href="https://docs.openshift.com/container-platform/4.5/support/remote_health_monitoring/opting-out-of-remote-health-reporting.html">https://docs.openshift.com/container-platform/4.5/support/remote_health_monitoring/opting-out-of-remote-health-reporting.html</a><br />
+  =&gt; <a href="https://docs.openshift.com/container-platform/4.5/updating/updating-restricted-network-cluster.html">https://docs.openshift.com/container-platform/4.5/updating/updating-restricted-network-cluster.html</a></p>
+</li>
+<li>
+<p>How to install, configure, use Node Feature Discovery operator. 
+  The article was written for OCP 4.1, therefore the UI is a little different in 4.6, but it's actually easier (without having to deal with YAML) in 4.6.<br />
+  =&gt; <a href="https://access.redhat.com/solutions/4734811">https://access.redhat.com/solutions/4734811</a></p>
+</li>
+</ul>
+<h2 id="2020-09">2020-09</h2>
+<ul>
+<li>4.5 on libvirt, <code>authentication</code> and <code>console</code> operators not available, and <code>console</code> pod's log indicating DNS issue for "oauth-openshift.<domain>"<br />
+  =&gt; <a href="https://github.com/openshift/installer/issues/1648#issuecomment-585235423">https://github.com/openshift/installer/issues/1648#issuecomment-585235423</a></li>
+</ul>
+<h2 id="2020-08">2020-08</h2>
+<ul>
+<li>
+<p>node <code>NotReady</code> after reboot perhaps after shut down for a few days, with "Kubelet stopped posting node status" in <code>oc describe node</code><br />
+  essentially, <code>sudo systemctl restart kubelet</code> on the bad node, followed by <code>oc get csr | grep Pending | awk '{print $1}' | xargs oc adm certificate approve</code>, perhaps multiple times as a few CSRs could come in for approval sequentially.<br />
+  =&gt; <a href="https://docs.openshift.com/container-platform/4.1/backup_and_restore/disaster_recovery/scenario-3-expired-certs.html">https://docs.openshift.com/container-platform/4.1/backup_and_restore/disaster_recovery/scenario-3-expired-certs.html</a></p>
+</li>
+<li>
+<p>random intermittent API server errors like "connection refused," "authentication required," "internal error," with <code>etcd</code> running on slow disk<br />
+  =&gt; <a href="https://github.com/openshift/release/blob/23074b5/ci-operator/templates/openshift/installer/cluster-launch-installer-openstack-e2e.yaml#L375-L382">https://github.com/openshift/release/blob/23074b5/ci-operator/templates/openshift/installer/cluster-launch-installer-openstack-e2e.yaml#L375-L382</a></p>
+</li>
+</ul>
+<h5 id="2020-07-30-45-ga">(2020-07-30 4.5 GA)</h5>
+<h5 id="2020-06-23-44-ga">(2020-06-23 4.4 GA)</h5>
+<h2 id="2020-06">2020-06</h2>
+<ul>
+<li><code>OOMKilled</code> on <em>large</em> POWER system, while same set of pods run fine on <em>smaller</em> x86 system, with possible tinkering with <code>slub_max_order</code> kernel param<br />
+  =&gt; <a href="https://medium.com/ibm-cloud/fortifying-ibm-cloud-private-for-large-enterprise-power-systems-6119804f0103">https://medium.com/ibm-cloud/fortifying-ibm-cloud-private-for-large-enterprise-power-systems-6119804f0103</a></li>
+</ul>
+<h5 id="2020-04-30-43-ga">(2020-04-30 4.3 GA)</h5>
+<h2 id="2020-02">2020-02</h2>
+<ul>
+<li>4.x image registry not accessible externally by default, need <code>default-route</code> created<br />
+  =&gt; <a href="https://docs.openshift.com/container-platform/4.3/registry/securing-exposing-registry.html">https://docs.openshift.com/container-platform/4.3/registry/securing-exposing-registry.html</a><br />
+  =&gt; <a href="https://docs.openshift.com/container-platform/4.4/registry/configuring-registry-operator.html#registry-operator-default-crd_configuring-registry-operator">https://docs.openshift.com/container-platform/4.4/registry/configuring-registry-operator.html#registry-operator-default-crd_configuring-registry-operator</a></li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>© Copyright IBM Corp. 2020, 2021</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

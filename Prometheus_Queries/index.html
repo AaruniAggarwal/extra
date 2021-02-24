@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>PROMETHEUS QUERIES FOR MONITORING OF OC CLUSTER - openshift-ppc64le</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="..">openshift-ppc64le</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Home(grown)</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../contrib/" class="nav-link">Contribute</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../actually-helped/" class="nav-link">External</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#prometheus-queries-for-monitoring-of-oc-cluster" class="nav-link">PROMETHEUS QUERIES FOR MONITORING OF OC CLUSTER</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#1-overall-io-load-on-your-instance" class="nav-link">1. Overall I/O load on your instance</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#2-node-disks-io-queries" class="nav-link">2. Node disk's I/O Queries</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#3-comparing-current-data-with-historical-data" class="nav-link">3. Comparing current data with historical data</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#4-etcd-monitoring" class="nav-link">4. etcd Monitoring</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#5-resource-metric-kubernetes-cpu-usage" class="nav-link">5. Resource Metric: Kubernetes CPU Usage</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#6-resource-metric-kubernetes-container-cpu-usage" class="nav-link">6. Resource Metric: Kubernetes Container CPU usage</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="prometheus-queries-for-monitoring-of-oc-cluster">PROMETHEUS QUERIES FOR MONITORING OF OC CLUSTER</h1>
+<p>Prometheus provides a functional query language called PromQL (Prometheus Query Language) that lets the user select and aggregate time series data in real time. The result of an expression can either be shown as a graph, viewed as tabular data in Prometheus's expression browser, or consumed by external systems via the HTTP API.This document discusses about some Prometheus Queries which might help the users for monitoring and tracking their clusters.    </p>
+<h2 id="1-overall-io-load-on-your-instance">1. Overall I/O load on your instance</h2>
+<p>The below expression is used for the global health-check of our system, we will be able to know the overall I/O load on our system. The node exporter exposes the following metric :  <br />
+<code>rate(node_disk_io_now[5s])</code><br />
+ and computing the rate for this metric will give the overall I/O load. Here, <code>[5s]</code> represents the time duration <code>d</code> of the query to be executed. Higher <code>d</code> smooths the graph, while lower <code>d</code> makes the graph more precise.   </p>
+<hr />
+<h2 id="2-node-disks-io-queries">2. Node disk's I/O Queries</h2>
+<p>Below are the various I/O queries made on the node disks:     </p>
+<p><code>node_disk_io_time_seconds_total</code> -- It serves as a counter and is incremented when I/O is in progress and hence is used to calculate disk 
+ I/O utilisation.  <br />
+<code>node_disk_read_bytes_total</code> -- It gives the total bytes read by the I/Os.  <br />
+<code>node_disk_written_bytes_total</code> -- It shows the number of bytes written by the I/Os.     <br />
+<code>node_disk_read_time_seconds_total</code> -- It shows the total time taken by a read I/Os.   <br />
+<code>node_disk_write_time_seconds_total</code> -- This is the total number of seconds spent by all writes.      <br />
+<code>node_disk_reads_completed_total</code>  -- It shows the number of read I/Os that are completed.      <br />
+<code>node_disk_writes_completed_total</code> -- The total number of writes completed successfully.       </p>
+<hr />
+<h2 id="3-comparing-current-data-with-historical-data">3. Comparing current data with historical data</h2>
+<p>PromQL allows querying historical data and combining / comparing it to the current data. Just add offset to the query. For instance, the following query would return week-old data for all the time series with node_network_receive_bytes_total name:    <br />
+<code>node_network_receive_bytes_total offset 7d</code>  </p>
+<hr />
+<h2 id="4-etcd-monitoring">4. etcd Monitoring</h2>
+<p>etcd is an open source distributed key-value store used to hold and manage the critical information that distributed systems need to keep running. Most notably, it manages the configuration data, state data, and metadata for Kubernetes.   <br />
+If the etcd service does not run correctly, successful operation of the whole OpenShift Container Platform cluster is in danger. Therefore, it is reasonable to configure monitoring of etcd.      </p>
+<p>Some of the metrics that are available and useful in our experience are as follows:  <br />
+<code>etcd_cluster_version</code>(gauge) : It shows which version is running.  <br />
+<code>etcd_debugging_disk_backend_commit_rebalance_duration_seconds</code> (cumulative) : The latency distributions of <strong><code>commit.rebalance</code></strong> called by bboltdb backend. (sum)  <br />
+<code>etcd_debugging_lease_revoked_total</code>(cumulative) : The total number of revoked leases.  <br />
+<code>etcd_debugging_lease_ttl_total</code>(cumulative) : Bucketed histogram of lease TTLs. (sum)  <br />
+<code>etcd_debugging_mvcc_db_total_size_in_bytes</code>(gauge) : Total size of the underlying database physically allocated in bytes.  <br />
+<code>etcd_debugging_mvcc_delete_total</code> (cumulative) : Total number of deletes seen by this member.    </p>
+<hr />
+<h2 id="5-resource-metric-kubernetes-cpu-usage">5. Resource Metric: Kubernetes CPU Usage</h2>
+<p>The below expression will give the CPU usage for all pods belonging to the cluster.    <br />
+<code>sum(rate(container_cpu_usage_seconds_total{container_name!="POD",pod_name!=""}))</code>   </p>
+<hr />
+<h2 id="6-resource-metric-kubernetes-container-cpu-usage">6. Resource Metric: Kubernetes Container CPU usage</h2>
+<p>The first expression will show CPU usage for individual instances of each container whereas the second expression aggregates CPU usage for all containers with the same name.    <br />
+a. <code>rate(container_cpu_usage_seconds_total{container_name!="POD",pod_name!=""})</code>  <br />
+b. <code>sum(rate(container_cpu_usage_seconds_total{container_name!="POD",pod_name!=""})) by (container_name)</code>     </p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>© Copyright IBM Corp. 2020, 2021</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

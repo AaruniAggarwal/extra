@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Deployment of Kruize on Openshift on Power - openshift-ppc64le</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="..">openshift-ppc64le</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Home(grown)</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../contrib/" class="nav-link">Contribute</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../actually-helped/" class="nav-link">External</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#deployment-of-kruize-on-openshift-on-power" class="nav-link">Deployment of Kruize on Openshift on Power</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#for-deploying-kruize-on-ibm-power-systems-refer-below-mentioned-steps" class="nav-link">For deploying kruize on IBM Power Systems refer below mentioned steps:</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#1-clone-the-kruize-github-repository" class="nav-link">1. Clone the kruize github repository :</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#2-run-the-deploysh-script-to-start-deployment" class="nav-link">2. Run the deploy.sh script to start deployment :</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#3-once-the-deployment-is-complete-create-a-route-in-order-to-access-the-kruize-api" class="nav-link">3. Once the deployment is complete, create a route in order to access the Kruize API .</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#4-use-the-api-to-view-recommendations" class="nav-link">4. Use the API to view recommendations</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#5-label-the-pod-to-monitor-your-application" class="nav-link">5. Label the pod to monitor your application:</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="deployment-of-kruize-on-openshift-on-power">Deployment of Kruize on Openshift on Power</h1>
+<p>There were times when we used to have challenges in right sizing and optimizing containers which leads to these drawback - When applications were not sized appropriately in a k8s cluster, they either waste resources (oversized) or worse get terminated (undersized), either way could result in loss of revenue. Quick fix for this issue is <strong>Kruize</strong>. Kruize is an opensource tool which monitors application containers for resource usage. It has an analysis engine which predicts the right size for the containers that are being monitored and offers recommendations on the right CPU and Memory <code>request</code> and <code>limit</code> values. This helps IT admins to review and apply the recommendations knowing that their applications and even the cluster is optimally sized.</p>
+<p>The install steps that <a href="https://github.com/kruize/kruize/blob/master/docs/README.md#openshift">kruize</a> has generally worked on an OpenShift cluster on IBM Power Systems, but you might find below some tweaks we had to make.</p>
+<blockquote>
+<p><strong><em>NOTE:</em></strong> It is recommended to run the pods that are being monitored by kruize with no requests and limits set (or with very high limits set). This helps kruize to understand what is the real usage and hence can recommend the right set of values.</p>
+</blockquote>
+<h3 id="for-deploying-kruize-on-ibm-power-systems-refer-below-mentioned-steps">For deploying kruize on IBM Power Systems refer below mentioned steps:</h3>
+<h3 id="1-clone-the-kruize-github-repository">1. Clone the kruize github repository :</h3>
+<p><code>$ git clone https://github.com/kruize/kruize.git</code> </p>
+<p><code>$ cd kruize</code></p>
+<p>Now make the following changes in <strong>manifests/kruize.yaml_template</strong></p>
+<pre><code class="language-text">- apiVersion: extensions/v1beta1
++ apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: kruize
+      labels:
+        app: kruize
+    spec:
+      replicas: 1
+ +    selector:
+ +      matchLabels:
+ +        app: kruize
+ +        name: kruize
+ +        app.kubernetes.io/name: &quot;kruize&quot;
+      template:
+        metadata:
+          labels:
+</code></pre>
+<h3 id="2-run-the-deploysh-script-to-start-deployment">2. Run the <code>deploy.sh</code> script to start deployment :</h3>
+<p><code># ./deploy.sh -c openshift</code></p>
+<p><strong><em>Sample output:</em></strong></p>
+<p><strong>Installing kruize for OpenShift</strong></p>
+<p>WARNING: This will create a Kruize ServiceMonitor object in the openshift-monitoring namespace</p>
+<p>WARNING: This is currently not recommended for production</p>
+<p>Create ServiceMonitor object and continue installation?(y/n)? yes</p>
+<p>Info: Checking pre requisites for OpenShift...done</p>
+<p>Info: Logging in to OpenShift cluster...</p>
+<p>Authentication required for https://api.kruize.cp.fyre.ibm.com:6443 (openshift)</p>
+<p>Username: kubeadmin</p>
+<p>Password: </p>
+<p>Login successful.</p>
+<p>You have access to 58 projects, the list has been suppressed. You can list all projects with 'oc projects'</p>
+<p>Using project "default".</p>
+<p>Info: Setting Prometheus URL as https://prometheus-k8s-openshift-monitoring.apps.kruize.cp.fyre.ibm.com</p>
+<p>Info: Deploying kruize yaml to OpenShift cluster</p>
+<p>Now using project "openshift-monitoring" on server "https://api.kruize.cp.fyre.ibm.com:6443".</p>
+<p>deployment.apps/kruize created</p>
+<p>service/kruize configured</p>
+<p>Info: Waiting for kruize to come up...</p>
+<hr />
+<p>kruize-6cfc8f4bbf-956vq                       1/1     ContainerCreating   0          11m</p>
+<p>kruize-f54c97d6f-78l7m                        1/1     Running             0          4s</p>
+<p>Info: kruize deploy succeeded: Running</p>
+<p>kruize-6cfc8f4bbf-956vq                       1/1     ContainerCreating   0          11m</p>
+<p>kruize-f54c97d6f-78l7m                        1/1     Running             0          4s</p>
+<hr />
+<blockquote>
+<p><strong><em>NOTE:</em></strong>  If kruize pod is not in <em>Running</em> state then check the logs of the failed kruize pod by executing 
+<code>oc logs -f &lt;kruize_pod_name&gt;</code>
+If log says execution format error then the image would be of some other architecture(probably amd64) .
+If that's the case, you can build your own power(ppc64le) image by using <code>build.sh</code> script present <a href="https://github.com/kruize/kruize/blob/master/build.sh">here</a> 
+But before running <code>./build.sh</code> make sure you have docker installed on your system .</p>
+</blockquote>
+<h3 id="3-once-the-deployment-is-complete-create-a-route-in-order-to-access-the-kruize-api">3. Once the deployment is complete, create a route in order to access the Kruize API .</h3>
+<ul>
+<li>$ cat route.yaml</li>
+</ul>
+<pre><code class="language-text">kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: kruize
+  namespace: openshift-monitoring
+  labels:
+    app: kruize
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  host: kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com
+  to:
+    kind: Service
+    name: kruize
+    weight: 100
+  port:
+    targetPort: http
+  wildcardPolicy: None
+status:
+  ingress:
+    - host: kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com
+      routerName: default
+      wildcardPolicy: None
+      routerCanonicalHostname: apps.kruize.cp.fyre.ibm.com
+</code></pre>
+<blockquote>
+<p><em>NOTE:</em> Change the values of <code>host</code> and <code>routerCanonicalHostname</code> according to your cluster. </p>
+</blockquote>
+<ul>
+<li>Run: <code>oc create -f route.yaml</code> </li>
+</ul>
+<h3 id="4-use-the-api-to-view-recommendations">4. Use the API to view recommendations</h3>
+<ul>
+<li>List recommendations for all applications by doing :</li>
+</ul>
+<p>$ curl http://&lt;<code>host_of_your_cluster</code>&gt;/recommendations?listApplications </p>
+<p><em>Example</em>: </p>
+<p>[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?listApplications</p>
+<pre><code class="language-text">[
+  {
+    &quot;application_name&quot;: &quot;kube-state-metrics&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      }
+    }
+  },
+  {
+    &quot;application_name&quot;: &quot;node-exporter&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;125.5M&quot;,
+        &quot;cpu&quot;: 0.5
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;150.7M&quot;,
+        &quot;cpu&quot;: 1.0
+      }
+    }
+  },
+  {
+    &quot;application_name&quot;: &quot;kruize&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;158.2M&quot;,
+        &quot;cpu&quot;: 0.5
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;278.1M&quot;,
+        &quot;cpu&quot;: 1.0
+      }
+    }
+  },
+  {
+    &quot;application_name&quot;: &quot;thanos-querier&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      }
+    }
+  },
+  {
+    &quot;application_name&quot;: &quot;prometheus-operator&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;133.8M&quot;,
+        &quot;cpu&quot;: 0.5
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;160.6M&quot;,
+        &quot;cpu&quot;: 1.0
+      }
+    }
+  }
+]
+
+</code></pre>
+<blockquote>
+<p><em>NOTE:</em> This is initial output before adding any load on application, and it shows all applications that are deployed in <code>openshift-monitoring</code> namespace because Kruize is also deployed in this namespace.</p>
+</blockquote>
+<ul>
+<li>List recommendations for single application:</li>
+</ul>
+<p>$ curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=kruize</p>
+<p>Output : </p>
+<pre><code class="language-text">[
+ {
+    &quot;application_name&quot;: &quot;kruize&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;158.2M&quot;,
+        &quot;cpu&quot;: 0.5
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;278.1M&quot;,
+        &quot;cpu&quot;: 1.0
+       }
+     }
+   }
+]
+</code></pre>
+<h3 id="5-label-the-pod-to-monitor-your-application">5. Label the pod to monitor your application:</h3>
+<p>Kruize by default monitors <code>openshift-monitoring</code> namespace. In order to monitor your application, run the following command:</p>
+<pre><code class="language-text">$ oc label pod -n &lt;NS&gt; &lt;POD_NAME&gt; app.kubernetes.io/name=&lt;ANY_NAME&gt;
+</code></pre>
+<p>NS stands for namespace name</p>
+<p><strong><em>Examples:</em></strong></p>
+<h5 id="1-to-monitor-deployment-for-an-acmeair-application">1. To monitor deployment for an acmeair application:</h5>
+<p>* [root@kruize-inf ~]# git clone https://github.ibm.com/powercloud/acmeair.git</p>
+<pre><code class="language-text">Cloning into 'acmeair'...
+remote: Enumerating objects: 31, done.
+remote: Total 31 (delta 0), reused 0 (delta 0), pack-reused 31
+Unpacking objects: 100% (31/31), done.
+
+[root@kruize-inf ~]# cd acmeair/
+[root@kruize-inf ~]# git checkout powervs
+
+Branch 'powervs' set up to track remote branch 'powervs' from 'origin'.
+Switched to a new branch 'powervs'
+
+[root@kruize-inf acmeair]# ls
+acmeair.PNG  deploy.sh  openshift-manifest  README.md
+
+[root@kruize-inf acmeair]# ./deploy.sh
+
+Route Host=acmeair.apps.kruize.cp.fyre.ibm.com
+Now using project &quot;acme&quot; on server &quot;https://api.kruize.cp.fyre.ibm.com:6443&quot;.
+
+You can add applications to this project with the 'new-app' command. For example, try:
+
+    oc new-app rails-postgresql-example
+
+to build a new example application in Ruby. Or use kubectl to deploy a simple Kubernetes application:
+
+    kubectl create deployment hello-node --image=k8s.gcr.io/serve_hostname
+
+Already on project &quot;acme&quot; on server &quot;https://api.kruize.cp.fyre.ibm.com:6443&quot;.
+Adding quay.io/pravin_dsilva/ for main service
+Patching Route Host: acmeair.apps.kruize.cp.fyre.ibm.com for main service
+Adding quay.io/pravin_dsilva/ for auth service
+Patching Route Host: acmeair.apps.kruize.cp.fyre.ibm.com for auth service
+Adding quay.io/pravin_dsilva/ for booking service
+Patching Route Host: acmeair.apps.kruize.cp.fyre.ibm.com for booking service
+Adding quay.io/pravin_dsilva/ for customer service
+Patching Route Host: acmeair.apps.kruize.cp.fyre.ibm.com for customer service
+Adding quay.io/pravin_dsilva/ for flight service
+Patching Route Host: acmeair.apps.kruize.cp.fyre.ibm.com for flight service
+route.route.openshift.io/acmeair-auth-route created
+deployment.apps/acmeair-authservice created
+service/acmeair-auth-service created
+route.route.openshift.io/acmeair-booking-route created
+deployment.apps/acmeair-bookingservice created
+service/acmeair-booking-service created
+service/acmeair-booking-db created
+deployment.apps/acmeair-booking-db created
+route.route.openshift.io/acmeair-customer-route created
+deployment.apps/acmeair-customerservice created
+service/acmeair-customer-service created
+service/acmeair-customer-db created
+deployment.apps/acmeair-customer-db created
+route.route.openshift.io/acmeair-flight-route created
+deployment.apps/acmeair-flightservice created
+service/acmeair-flight-service created
+service/acmeair-flight-db created
+deployment.apps/acmeair-flight-db created
+route.route.openshift.io/acmeair-main-route created
+deployment.apps/acmeair-mainservice created
+service/acmeair-main-service created
+Acme Air Deployment complete. Access the application at acmeair.apps.kruize.cp.fyre.ibm.com/acmeair
+
+[root@kruize-inf acmeair]# oc get pods
+NAME                                       READY   STATUS    RESTARTS   AGE
+acmeair-authservice-55648d8445-4k4r4       1/1     Running   0          57m
+acmeair-booking-db-6ffc689d55-kxs9r        1/1     Running   0          57m
+acmeair-bookingservice-76fc8f7f84-5vsml     1/1     Running   0          57m
+acmeair-customer-db-ff6bcc8fc-qzxxp       1/1     Running   0          57m
+acmeair-customerservice-77b69b8f58-wvwrb   1/1     Running   0          57m
+acmeair-flight-db-6f9ff4dd6f-zczrl         1/1     Running   0          57m
+acmeair-flightservice-7d47988b8b-hwqjg     1/1     Running   0          57m
+acmeair-mainservice-7f7ff489d-qhss7       1/1     Running   0          57m
+</code></pre>
+<ul>
+<li>In order to monitor your application, label the pod as mentioned in Step5:</li>
+</ul>
+<pre><code>[root@kruize-inf acmeair]# oc label pod -n acme acmeair-customer-db-ff6bcc8fc-qzxxp app.kubernetes.io/name=acmeair-customer-db
+</code></pre>
+<p>pod/acmeair-customer-db-ff6bcc8fc-qzxxp labeled</p>
+<ul>
+<li>List recommendations: </li>
+</ul>
+<p>[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=acmeair-customer-db</p>
+<pre><code class="language-text">[
+  {
+    &quot;application_name&quot;: &quot;acmeair-customer-db&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      }
+    }
+  }
+]
+</code></pre>
+<blockquote>
+<p><em>NOTE:</em> The above outputs are before adding any load on the application.</p>
+</blockquote>
+<p><strong>After adding load:</strong> </p>
+<p>curl http://acmeair.apps.kruize.cp.fyre.ibm.com:6443/booking/loader/load</p>
+<p>curl http://acmeair.apps.kruize.cp.fyre.ibm.com:6443/flight/loader/load</p>
+<p>curl http://acmeair.apps.kruize.cp.fyre.ibm.com:6443/customer/loader/load?numCustomers=100000 </p>
+<p><strong>To list recommendations for single application:</strong> </p>
+<p>[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=acmeair-customer-db</p>
+<pre><code class="language-text">[
+  {
+    &quot;application_name&quot;: &quot;acmeair-customer-db&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;194.6M&quot;,
+        &quot;cpu&quot;: 0.5
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;233.5M&quot;,
+        &quot;cpu&quot;: 1.0
+      }
+    }
+  }
+]
+</code></pre>
+<p><strong>List of recommendations on all the applications:</strong>  </p>
+<p>[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?listApplications</p>
+<pre><code class="language-text">[
+  {
+    &quot;application_name&quot;: &quot;kube-state-metrics&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      }
+    }
+  },
+  {
+    &quot;application_name&quot;: &quot;node-exporter&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;125.8M&quot;,
+        &quot;cpu&quot;: 0.5
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;151.4M&quot;,
+        &quot;cpu&quot;: 1.0
+      }
+    }
+  },
+  {
+    &quot;application_name&quot;: &quot;kruize&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;175.9M&quot;,
+        &quot;cpu&quot;: 0.5
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;278.1M&quot;,
+        &quot;cpu&quot;: 1.0
+      }
+    }
+  },
+  {
+    &quot;application_name&quot;: &quot;acmeair-customer-db&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;194.6M&quot;,
+        &quot;cpu&quot;: 0.5
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;233.5M&quot;,
+        &quot;cpu&quot;: 1.0
+      }
+    }
+  },
+  {
+    &quot;application_name&quot;: &quot;thanos-querier&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      }
+    }
+  },
+  {
+    &quot;application_name&quot;: &quot;prometheus-operator&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;134.1M&quot;,
+        &quot;cpu&quot;: 0.5
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;161.6M&quot;,
+        &quot;cpu&quot;: 1.0
+      }
+    }
+  }
+]
+</code></pre>
+<h5 id="2-to-monitor-osd-pod-in-openshift-container-storage">2. To monitor <strong>osd</strong> pod in Openshift Container Storage:</h5>
+<p>[root@kruize-inf ~]# oc get pods -n openshift-storage |grep osd</p>
+<pre><code class="language-text">NAME                                                              READY   STATUS      RESTARTS   AGE
+rook-ceph-osd-0-6499496d58-pwml8                                  1/1     Running     0          12m
+rook-ceph-osd-1-5bd4d44b6f-dd6nq                                  1/1     Running     22         2d15h
+rook-ceph-osd-2-655f579dc7-65c7p                                  1/1     Running     0          141m
+</code></pre>
+<ul>
+<li>Label the osd pod which you want to monitor: </li>
+</ul>
+<p>[root@kruize-inf ~]# oc label pod rook-ceph-osd-1-5bd4d44b6f-dd6nq -n openshift-storage app.kubernetes.io/name=rook-ceph-osd-1</p>
+<ul>
+<li>View Recommendations: </li>
+</ul>
+<p><strong>Before adding load:</strong>  </p>
+<p>[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=rook-ceph-osd-1</p>
+<pre><code class="language-text">[
+  {
+    &quot;application_name&quot;: &quot;rook-ceph-osd-1&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;0.0M&quot;,
+        &quot;cpu&quot;: 0.0
+      }
+    }
+  }
+]
+</code></pre>
+<p><strong>After running some tests/adding load:</strong>  </p>
+<p>[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=rook-ceph-osd-1</p>
+<pre><code class="language-text">[
+  {
+    &quot;application_name&quot;: &quot;rook-ceph-osd-1&quot;,
+    &quot;resources&quot;: {
+      &quot;requests&quot;: {
+        &quot;memory&quot;: &quot;3427.2M&quot;,
+        &quot;cpu&quot;: 0.5
+      },
+      &quot;limits&quot;: {
+        &quot;memory&quot;: &quot;6415.4M&quot;,
+        &quot;cpu&quot;: 1.0
+      }
+    }
+  }
+]
+</code></pre></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>© Copyright IBM Corp. 2020, 2021</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Managing Node Health - openshift-ppc64le</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="..">openshift-ppc64le</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Home(grown)</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../contrib/" class="nav-link">Contribute</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../actually-helped/" class="nav-link">External</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#managing-node-health" class="nav-link">Managing Node Health</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#1-node-reporting-notready" class="nav-link">1. Node reporting NotReady</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#2-querying-the-kubelets-status-on-a-node" class="nav-link">2. Querying the kubelet’s status on a node</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#3-node-logs-get-logs-for-networkmanager" class="nav-link">3. Node-logs: Get logs for NetworkManager</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#4-nodes-report-ready-but-etcd-health-check-fails" class="nav-link">4. Nodes report ready but ETCD health check fails</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#5-file-system-trackinga-complete-monitoring-for-disk-usage" class="nav-link">5. File System tracking(a complete monitoring for disk usage)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#6-read-write-latencies" class="nav-link">6. Read &amp; Write Latencies</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="managing-node-health">Managing Node Health</h1>
+<p>A node provides the runtime environments for containers. Each node in a Kubernetes cluster has the required services to be managed by the master. Nodes also have the required services to run pods, including the container runtime, a kubelet, and a service proxy.</p>
+<p>OpenShift Container Platform creates nodes from a cloud provider, physical systems, or virtual systems. Kubernetes interacts with node objects that are a representation of those nodes. The master uses the information from node objects to validate nodes with health checks. A node is ignored until it passes the health checks, and the master continues checking nodes until they are valid.
+We can manage nodes in our instance using the CLI. When we perform node management operations, the CLI interacts with node objects that are representations of actual node hosts. The master uses the information from node objects to validate nodes with health checks.</p>
+<p>You can review cluster node health status, resource consumption statistics, and node logs using the below commands. Additionally, you can query kubelet status on individual nodes.</p>
+<h2 id="1-node-reporting-notready">1. Node reporting NotReady</h2>
+<hr />
+<p>The mentioned problem was seen on 4.5.4 running on KVM/libvirt, but this could happen and be applied on other platforms.    </p>
+<p>Some nodes in this 3-master/5-worker cluster start showing "NotReady" state with "Kubelet stopped posting node status" in <code>oc describe node</code> output.</p>
+<p>SSH'ing into those "NotReady" nodes, it could be seen that <code>Current certificate is expired</code> in <code>journalctl -u kubelet</code>, and that is precisely the issue preventing communication with API server.</p>
+<p>You might also see:</p>
+<pre><code class="language-text">Failed Units: 1
+  NetworkManager-wait-online.service
+[core@worker-0 ~]$
+</code></pre>
+<p>upon SSH login, but that is a red herring. </p>
+<p>In order to resolve this issue run the following commands on "NotReady" node(s):  </p>
+<p>$ <code>sudo systemctl restart kubelet</code>  </p>
+<p>followed by, anywhere you can run <code>oc</code> commands against the cluster;  </p>
+<p>$ <code>oc get csr | grep Pending | awk '{print $1}' | xargs oc adm certificate approve</code>  </p>
+<p>Note - Make sure you have no more "Pending" CSRs after a minute or two as well.</p>
+<h2 id="2-querying-the-kubelets-status-on-a-node">2. Querying the kubelet’s status on a node</h2>
+<hr />
+<p>The kubelet is managed using a systemd service on each node. Review the kubelet’s status by querying the kubelet systemd service within a debug Pod.</p>
+<p>a. Start a debug Pod for a node: $ <code>oc debug node/node_name</code></p>
+<p>b.  Set /host as the root directory within the debug shell. The debug Pod mounts the host’s root file system in /host within the Pod. By changing the root directory to /host, you can run binaries contained in the host’s executable paths: # <code>chroot /host</code></p>
+<p>c.  Check whether the kubelet systemd service is active on the node: # <code>systemctl is-active kubelet</code></p>
+<p>d. Output a more detailed kubelet.service status summary: # <code>systemctl status kubelet</code></p>
+<p><strong><em>Status on CLI</em></strong></p>
+<pre><code class="language-text">oc debug node/master0.ocp-support-suad.cp.fyre.ibm.com
+Starting pod/master0ocp-support-suadcpfyreibmcom-debug ...
+To use host binaries, run `chroot /host`
+Pod IP: 10.17.73.96
+If you don't see a command prompt, try pressing enter.
+sh-4.2# chroot /host
+sh-4.4# systemctl is-active kubelet
+active
+sh-4.4# systemctl status kubelet
+● kubelet.service - MCO environment configuration
+Loaded: loaded (/etc/systemd/system/kubelet.service; enabled; vendor preset: enabled)
+Drop-In: /etc/systemd/system/kubelet.service.d
+└─10-mco-default-env.conf
+Active: active (running) since Thu 2020-08-27 07:47:12 UTC; 1 day 3h ago
+Process: 1347 ExecStartPre=/bin/rm -f /var/lib/kubelet/cpu_manager_state (code=exited, status=0/SUCCESS)
+Process: 1344 ExecStartPre=/bin/mkdir --parents /etc/kubernetes/manifests (code=exited, status=0/SUCCESS)
+Main PID: 1349 (kubelet)
+Tasks: 38 (limit: 51304)
+Memory: 264.3M
+CPU: 7h 15min 31.395s
+CGroup: /system.slice/kubelet.service
+└─1349 kubelet --config=/etc/kubernetes/kubelet.conf --bootstrap-kubeconfig=/etc/kubernetes/kubeconfig --kubeconfig=/var/lib/kubelet/kubeconfig --container-runtime=remote --container-runtime-en&gt;
+
+
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.827568 1349 atomic_writer.go:157] pod openshift-kube-scheduler-operator/openshift-kube-scheduler-operator-769d7b&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.827609 1349 operation_generator.go:657] MountVolume.SetUp succeeded for volume &quot;config&quot; (UniqueName: &quot;kubernetes&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.827720 1349 secret.go:183] Setting up volume node-ca-token-r9zm6 for pod 42e3fbda-1361-4c75-9f72-7938a75a6073 at&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.827792 1349 secret.go:207] Received secret openshift-image-registry/node-ca-token-r9zm6 containing (4) pieces of&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.828220 1349 atomic_writer.go:157] pod openshift-image-registry/node-ca-vhm68 volume node-ca-token-r9zm6: no upda&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.828265 1349 operation_generator.go:657] MountVolume.SetUp succeeded for volume &quot;node-ca-token-r9zm6&quot; (UniqueName&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.828357 1349 secret.go:183] Setting up volume serving-cert for pod a3679c68-645c-4b58-9324-b03a923624f0 at /var/l&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.828419 1349 secret.go:207] Received secret openshift-kube-scheduler-operator/kube-scheduler-operator-serving-cer&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.828681 1349 atomic_writer.go:157] pod openshift-kube-scheduler-operator/openshift-kube-scheduler-operator-769d7b&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.828717 1349 operation_generator.go:657] MountVolume.SetUp succeeded for volume &quot;serving-cert&quot; (UniqueName: &quot;kube&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.837829 1349 atomic_writer.go:157] pod openshift-image-registry/node-ca-vhm68 volume serviceca: no update require&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.837926 1349 operation_generator.go:657] MountVolume.SetUp succeeded for volume &quot;serviceca&quot; (UniqueName: &quot;kuberne&gt;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.970203 1349 exec.go:60] Exec probe response: &quot;&quot;
+Aug 28 11:35:41 master0.ocp-support-suad.cp.fyre.ibm.com hyperkube[1349]: I0828 11:35:41.970272 1349 prober.go:133] Liveness probe for &quot;ovs-p2qkz_openshift-sdn(6d62e5db-053b-4573-95ce-d7d478f578d9):ope&gt;
+
+</code></pre>
+<h2 id="3-node-logs-get-logs-for-networkmanager">3. Node-logs: Get logs for NetworkManager</h2>
+<hr />
+<p>The below command will give the logs of the network manager of a particular node of a cluster.</p>
+<p>$ <code>oc adm node-logs --role master -u NetworkManager.service</code></p>
+<pre><code class="language-text">Sep 06 04:01:37.044137 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0439] dhcp4 (enp0s3): option dhcp_lease_time      =&gt; '600'
+Sep 06 04:01:37.044177 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0441] dhcp4 (enp0s3): option domain_name          =&gt; 'cp.fyre.ibm.com'
+Sep 06 04:01:37.044199 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0441] dhcp4 (enp0s3): option domain_name_servers  =&gt; '10.17.64.21 10.17.64.22'
+Sep 06 04:01:37.044219 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0442] dhcp4 (enp0s3): option domain_search        =&gt; 'cp.fyre.ibm.com'
+Sep 06 04:01:37.044239 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0442] dhcp4 (enp0s3): option expiry               =&gt; '1599365497'
+Sep 06 04:01:37.044259 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0442] dhcp4 (enp0s3): option ip_address           =&gt; '10.17.73.158'
+Sep 06 04:01:37.044280 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0442] dhcp4 (enp0s3): option next_server          =&gt; '10.17.64.9'
+Sep 06 04:01:37.044301 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0442] dhcp4 (enp0s3): option requested_broadcast_address =&gt; '1'
+Sep 06 04:01:37.044322 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0443] dhcp4 (enp0s3): option requested_domain_name =&gt; '1'
+Sep 06 04:01:37.044342 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0443] dhcp4 (enp0s3): option requested_domain_name_servers =&gt; '1'
+Sep 06 04:01:37.044363 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0443] dhcp4 (enp0s3): option requested_domain_search =&gt; '1'
+Sep 06 04:01:37.044383 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0443] dhcp4 (enp0s3): option requested_host_name  =&gt; '1'
+Sep 06 04:01:37.044403 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0443] dhcp4 (enp0s3): option requested_interface_mtu =&gt; '1'
+Sep 06 04:01:37.044424 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0444] dhcp4 (enp0s3): option requested_ms_classless_static_routes =&gt; '1'
+Sep 06 04:01:37.044471 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0444] dhcp4 (enp0s3): option requested_nis_domain =&gt; '1'
+Sep 06 04:01:37.044491 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0444] dhcp4 (enp0s3): option requested_nis_servers =&gt; '1'
+Sep 06 04:01:37.044511 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0444] dhcp4 (enp0s3): option requested_ntp_servers =&gt; '1'
+Sep 06 04:01:37.044532 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0445] dhcp4 (enp0s3): option requested_rfc3442_classless_static_routes =&gt; '1'
+Sep 06 04:01:37.044552 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0445] dhcp4 (enp0s3): option requested_root_path  =&gt; '1'
+Sep 06 04:01:37.044572 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0445] dhcp4 (enp0s3): option requested_routers    =&gt; '1'
+Sep 06 04:01:37.044593 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0445] dhcp4 (enp0s3): option requested_static_routes =&gt; '1'
+Sep 06 04:01:37.044613 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0445] dhcp4 (enp0s3): option requested_subnet_mask =&gt; '1'
+Sep 06 04:01:37.044637 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0446] dhcp4 (enp0s3): option requested_time_offset =&gt; '1'
+Sep 06 04:01:37.044658 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0446] dhcp4 (enp0s3): option requested_wpad       =&gt; '1'
+Sep 06 04:01:37.044734 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0446] dhcp4 (enp0s3): option routers              =&gt; '10.17.64.1'
+Sep 06 04:01:37.044759 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0447] dhcp4 (enp0s3): option subnet_mask          =&gt; '255.255.224.0'
+Sep 06 04:01:37.044779 master2.ocp-support-suad.cp.fyre.ibm.com NetworkManager[1163]: &lt;info&gt;  [1599364897.0447] dhcp4 (enp0s3): state changed extended -&gt; extended
+</code></pre>
+<h2 id="4-nodes-report-ready-but-etcd-health-check-fails">4. Nodes report ready but ETCD health check fails</h2>
+<hr />
+<pre><code class="language-text">[root@master02 ~]#  etcdctl -C https://master00.ose.example.com:2379,https://master01.ose.example.com:2379,https://master01.ose.example.com:2379 --ca-file=/etc/origin/master/master.etcd-ca.crt     --cert-file=/etc/origin/master/master.etcd-client.crt     --key-file=/etc/origin/master/master.etcd-client.key cluster-health
+member e0e2c123213680f is healthy: got healthy result from https://192.168.200.50:2379
+member 64f1077d838e039c is healthy: got healthy result from https://192.168.200.51:2379
+member a9e031ea9ce2a521 is unhealthy: got unhealthy result from https://192.168.200.52:2379
+</code></pre>
+<p>In the event that the health check fails check the status of etcd you could see one or a combination of the following:</p>
+<pre><code class="language-text">[root@master02 ~]#  etcdctl -C https://master00.ose.example.com:2379,https://master01.ose.example.com:2379,https://master01.ose.example.com:2379 --ca-file=/etc/origin/master/master.etcd-ca.crt     --cert-file=/etc/origin/master/master.etcd-client.crt     --key-file=/etc/origin/master/master.etcd-client.key cluster-health
+member e0e2c123213680f is healthy: got healthy result from https://192.168.200.50:2379
+member 64f1077d838e039c is healthy: got healthy result from https://192.168.200.51:2379
+member a9e031ea9ce2a521 is unhealthy: got unhealthy result from https://192.168.200.52:2379
+[root@master01 ~]# systemctl status etcd
+● etcd.service - Etcd Server
+   Loaded: loaded (/usr/lib/systemd/system/etcd.service; enabled; vendor preset: disabled)
+   Active: active (running) since Thu 2016-02-25 08:43:37 CST; 4h 32min ago
+ Main PID: 1103 (etcd)
+   CGroup: /system.slice/etcd.service
+           └─1103 /usr/bin/etcd --name=master01.ose.example.com --data-dir=/var/lib/etcd/ --lis...
+
+
+Feb 25 11:32:52 master01 etcd[1103]: got unexpected response error (etcdserver: request timed out)
+Feb 25 11:32:52 master01 etcd[1103]: got unexpected response error (etcdserver: request timed out)
+Feb 25 11:33:02 master01 etcd[1103]: got unexpected response error (etcdserver: request timed out)
+Feb 25 11:33:02 master01 etcd[1103]: got unexpected response error (etcdserver: request timed out)
+Feb 25 11:33:12 master01 etcd[1103]: got unexpected response error (etcdserver: request timed out)
+Feb 25 11:33:12 master01 etcd[1103]: got unexpected response error (etcdserver: request timed out)
+[root@master00 ~]# systemctl status etcd
+● etcd.service - Etcd Server
+   Loaded: loaded (/usr/lib/systemd/system/etcd.service; enabled; vendor preset: disabled)
+   Active: active (running) since Thu 2016-02-25 08:43:55 CST; 4h 32min ago
+ Main PID: 1097 (etcd)
+   CGroup: /system.slice/etcd.service
+           └─1097 /usr/bin/etcd --name=master00.ose.example.com --data-dir=/var/lib/etcd/ --lis...
+
+
+Feb 25 11:40:25 master00 etcd[1097]: the connection to peer a9e031ea9ce2a521 is unhealthy
+Feb 25 11:40:55 master00 etcd[1097]: the connection to peer a9e031ea9ce2a521 is unhealthy
+Feb 25 11:41:25 master00 etcd[1097]: the connection to peer a9e031ea9ce2a521 is unhealthy
+Feb 25 11:41:55 master00 etcd[1097]: the connection to peer a9e031ea9ce2a521 is unhealthy
+Feb 25 11:42:25 master00 etcd[1097]: the connection to peer a9e031ea9ce2a521 is unhealthy
+</code></pre>
+<p><strong>Solution</strong></p>
+<p>In most cases restarting etcd one at a time on each etcd host resolves the issue</p>
+<p>$ <code>sudo systemctl restart etcd</code></p>
+<p>Reference Link - <a href="http://v1.uncontained.io/playbooks/troubleshooting/troubleshooting_guide.html">http://v1.uncontained.io/playbooks/troubleshooting/troubleshooting_guide.html</a></p>
+<h2 id="5-file-system-trackinga-complete-monitoring-for-disk-usage">5. File System tracking(a complete monitoring for disk usage)</h2>
+<hr />
+<p>To monitor filesystems and more precisely the overall space remaining on various filesystems , 
+the node exporter exports two metrics to retrieve such statistics :</p>
+<p>a. <code>node_filesystem_avail_bytes</code><br />
+b. <code>node_filesystem_size_bytes</code>  </p>
+<p>Use below query in Prometheus for the overall filesystem usage by device or by mountpoint :</p>
+<p><code>( 1 - node_filesystem_avail_bytes /node_filesystem_size_bytes )*100</code></p>
+<h2 id="6-read-write-latencies">6. Read &amp; Write Latencies</h2>
+<hr />
+<p>Another great metric for monitoring is the read and write latencies on our disks.
+The node exporter exports multiple metrics to compute it.
+On the read side, we have:</p>
+<p>a.<code>node_disk_read_time_seconds_total</code>  <br />
+b.<code>node_disk_reads_completed_total</code>  </p>
+<p>On the write side, we have:</p>
+<p>a.<code>node_disk_write_time_seconds_total</code> <br />
+b.<code>node_disk_writes_completed_total</code>  </p>
+<p>If we compute rates for the two metrics, and divide one by the other, we are able to compute the latency or the time that your disk takes in order to complete such operations.
+Use below query in Prometheus for the disk latency :
+ <code>rate(node_disk_write_time_seconds_total[5s])/rate(node_disk_writes_completed_total[5s])*100</code></p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>© Copyright IBM Corp. 2020, 2021</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>How to Troubleshoot Pending Pods - openshift-ppc64le</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="..">openshift-ppc64le</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Home(grown)</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../contrib/" class="nav-link">Contribute</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../actually-helped/" class="nav-link">External</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#how-to-troubleshoot-pending-pods" class="nav-link">How to Troubleshoot Pending Pods</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#initial-diagnosis" class="nav-link">Initial diagnosis:</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#1-reason-insufficient-resources-on-the-nodes-available" class="nav-link">1. Reason: Insufficient resources on the nodes available</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#how-can-this-be-resolved" class="nav-link">How can this be resolved?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#2-reason-node-and-pod-affinity-rules-applied-to-the-pod" class="nav-link">2. Reason: Node and pod affinity rules applied to the pod</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#how-can-this-be-resolved_1" class="nav-link">How can this be resolved?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#3-reason-applying-taints-and-tolerations" class="nav-link">3. Reason: Applying taints and tolerations</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#how-can-this-be-resolved_2" class="nav-link">How can this be resolved?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#4-reason-issues-with-container-engine-on-the-host" class="nav-link">4. Reason: Issues with Container engine on the host</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#how-can-this-be-resolved_3" class="nav-link">How can this be resolved?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#5-reason-persistentvolumeclaims" class="nav-link">5. Reason: PersistentVolumeClaims</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#how-can-this-be-resolved_4" class="nav-link">How can this be resolved?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#6-reason-using-host-port" class="nav-link">6. Reason: Using host port</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#how-can-this-be-resolved_5" class="nav-link">How can this be resolved?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="how-to-troubleshoot-pending-pods">How to Troubleshoot Pending Pods</h1>
+<p>=======================================================================</p>
+<p>A pod stuck in pending state cannot be scheduled onto a node until the problem is identified and resolved.
+It could be caused due to a handful of reasons ranging from resource issues to the rules applied to the pods and nodes.
+For this, a few commands could be executed to narrow down the possibilities and focus on what could have been the exact issue causing it.
+A few initial diagnostic commands mentioned below could be a starting step to help troubleshoot the pods stuck in pending state.</p>
+<h2 id="initial-diagnosis">Initial diagnosis:</h2>
+<ul>
+<li><code>oc adm top nodes</code><br />
+This command will show how CPU and Memory are tight across nodes in the cluster.
+If you see high percentage number(s), the node(s) is/are running out of that resource, and possibly preventing new pods from being scheduled and starting.
+Check reason 1 below.</li>
+<li><code>oc describe node node-name</code><br />
+This is a good follow-up command to above, and will provide detailed information of a specific node. Checking the information under 'Allocated resources' or 'Conditions' could help in understanding if the problem is inclining towards insufficient resources(memory or CPU) on the node and in determining the resources to be allocated to the pod accordingly</li>
+<li><code>oc get pods -A | grep Pending</code><br />
+This command will show pods that are in Pending state in the cluster.
+If you see only a handful, you are in luck and proceed with below oc describe pod command for those to find out more details and which subsection of this document to go.
+If you see many more Pending pods, it may be quicker to suspect more systemic issues, than individual pod issues, although it may still come down to it.</li>
+<li><code>oc describe pod pod-name</code><br />
+The 'Events' section of the output would provide the current status of the pod and also the reason for it being in that state.
+If it is stuck in pending state, based on the reason, that particular issue can be resolved by following the steps below</li>
+</ul>
+<h2 id="1-reason-insufficient-resources-on-the-nodes-available">1. Reason: Insufficient resources on the nodes available</h2>
+<hr />
+<pre><code>        Error ==&gt;  `0/5 nodes are available: 1 Insufficient cpu`
+</code></pre>
+<ul>
+<li>Pod went to pending state if you  don't have enough resources: You may have exhausted the supply of CPU or Memory in your cluster.</li>
+</ul>
+<h3 id="how-can-this-be-resolved">How can this be resolved?</h3>
+<p>Viewing the CPU and memory usage statistics on the nodes could help in better allocation of a pod to the desired node. This can be checked by <code>oc adm top nodes</code> 
+Note: <cluster-reader> permission is required to view the usage statistics
+Here are some example command lines that extract just the necessary information.    </p>
+<p><code>oc get nodes -o yaml | egrep '\sname:|cpu:|memory:'</code></p>
+<pre><code>name: master-0.202-8880.example.com
+      cpu: 7500m
+      memory: 16101184Ki
+      cpu: &quot;8&quot;
+      memory: 16715584Ki
+</code></pre>
+<p><code>oc get nodes -o json | jq '.items[] | {name: .metadata.name, cap: .status.capacity}'</code></p>
+<pre><code>{
+  &quot;name&quot;: &quot;master-0.202-8880.example.com&quot;,
+  &quot;cap&quot;: {
+    &quot;cpu&quot;: &quot;8&quot;,
+    &quot;ephemeral-storage&quot;: &quot;209290220Ki&quot;,
+    &quot;hugepages-16Gi&quot;: &quot;0&quot;,
+    &quot;hugepages-16Mi&quot;: &quot;0&quot;,
+    &quot;memory&quot;: &quot;16715584Ki&quot;,
+    &quot;pods&quot;: &quot;250&quot;
+  } }
+</code></pre>
+<p>To view the statistics of a node based labels - <oc adm top node --selector=' '>  (Operators used: =, != and ==). Note: <cluster-reader> permission is required to view the usage statistics. To delete all pods which are completed/failed  and free the resources use the below command.
+For a current namespace</p>
+<p><code>$(oc get pods | grep Error | awk '{print $1}'); do oc delete pod --grace-period=1 ${pod}; done</code> </p>
+<p>For all namespaces</p>
+<p><code>$(oc get pods --all-namespaces | grep Error | awk '{print $1}'); do oc delete pod --grace period=1 ${pod}; done</code></p>
+<h2 id="2-reason-node-and-pod-affinity-rules-applied-to-the-pod">2. Reason: Node and pod affinity rules applied to the pod</h2>
+<hr />
+<pre><code>        Error ==&gt; 1 node(s) didn't match pod affinity/anti-affinity
+</code></pre>
+<ul>
+<li>If you do not carefully configure pod affinity, node affinity and pod anti-affinity with equal-priority pods, the pod might not be scheduled and ends up in pending/waiting state</li>
+<li>Depending on your pod priority and preemption settings, the scheduler might not be able to find an appropriate node for a pod without violating affinity requirements.</li>
+</ul>
+<h3 id="how-can-this-be-resolved_1">How can this be resolved?</h3>
+<p>Pod affinity, pod anti-affinity and node affinity allow you to constrain which nodes your pod is eligible to be scheduled on based on the key/value labels on other pods.
+Here is a sample configuration to help understand the application of affinity rules to nodes and pods
+Sample pod configuration with a node selector rule :</p>
+<pre><code>    spec:
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+        node-role.kubernetes.io/worker: ''
+        type: user-node
+</code></pre>
+<p>Sample pod configuration with a node affinity preferred rule :</p>
+<pre><code>       spec:
+         affinity:
+            nodeAffinity: 
+               preferredDuringSchedulingIgnoredDuringExecution: 
+               - weight: 1 
+                  preference:
+                matchExpressions:
+                 - key: e2e-az-EastWest 
+                    operator: In 
+                    values:
+                    - e2e-az-East 
+                    - e2e-az-West     
+</code></pre>
+<p>Using node selectors and node affinity in the same pod configuration, note the following:</p>
+<ul>
+<li>
+<p>If you configure both nodeSelector and nodeAffinity, both conditions must be satisfied for the pod to be scheduled onto a candidate node.</p>
+</li>
+<li>
+<p>If you specify multiple nodeSelectorTerms associated with nodeAffinity types, then the pod can be scheduled onto a node if one of the nodeSelectorTerms is satisfied.</p>
+</li>
+<li>
+<p>If you specify multiple matchExpressions associated with nodeSelectorTerms, then the pod can be scheduled onto a node only if all matchExpressions are satisfied.</p>
+</li>
+</ul>
+<h2 id="3-reason-applying-taints-and-tolerations">3. Reason: Applying taints and tolerations</h2>
+<hr />
+<pre><code>        Error ==&gt; 1 node(s) had taints that the pod didn't tolerate
+</code></pre>
+<ul>
+<li>When a taint is applied to a node, it repels the scheduling of a pod on that node unless it matches the taint with its tolerations.</li>
+</ul>
+<h3 id="how-can-this-be-resolved_2">How can this be resolved?</h3>
+<p>Ensure that the tolerations are applied to the pods such that they match the taints of the nodes to end up being scheduled on the desired one. </p>
+<p>The taints applied to a node can be checked through <code>oc describe node node-name | grep -i taint</code>. The pod toleration in the respective yaml file can be verified to check if the pod can be scheduled on that particular node.</p>
+<p>Example : 
+If a particular node has the following taints:</p>
+<p><code>oc describe node node-1 | grep -i taint</code></p>
+<pre><code>Taints: node.alpha.kubernetes.io/not-ready:NoExecute
+</code></pre>
+<p>The pod with the appropriate tolerations would be schedules on node-1 such as:</p>
+<pre><code>tolerations:
+- key: &quot;node.alpha.kubernetes.io/not-ready&quot; 
+operator: &quot;Exists&quot; 
+effect: &quot;NoExecute&quot;
+</code></pre>
+<h2 id="4-reason-issues-with-container-engine-on-the-host">4. Reason: Issues with Container engine on the host</h2>
+<hr />
+<pre><code>        Error ==&gt; failed to pull image
+</code></pre>
+<ul>
+<li>
+<p>The specific image being used by the pod might not be available in the repository it is being pulled from. </p>
+</li>
+<li>
+<p>As an example</p>
+</li>
+</ul>
+<p><code>Normal   Pulling  10s (x4 over 94s)  kubelet, worker-1.prashanth-3d14.redhat.com  Pulling image "hello-openshift"  Warning  Failed   9s (x4 over 93s)   kubelet, worker-1.prashanth-3d14.redhat.com  Failed to pull image "hello-openshift": rpc error: code = Unknown desc = Error reading manifest latest in docker.io/hello-openshift/hello: errors</code></p>
+<h3 id="how-can-this-be-resolved_3">How can this be resolved?</h3>
+<p>The following can be checked:</p>
+<ul>
+<li>Make sure that you have the name of the image correct.              </li>
+<li>Does the image exist in the repository being pulled from?    </li>
+<li>Have you checked if the image is pushed to the repository?          </li>
+<li>Run a manual podman/docker pull image on your machine to see if the image can be pulled.</li>
+</ul>
+<h2 id="5-reason-persistentvolumeclaims">5. Reason: PersistentVolumeClaims</h2>
+<hr />
+<pre><code>        Error ==&gt; pod has unbound immediate PersistentVolumeClaims
+</code></pre>
+<ul>
+<li>
+<p>Pod can get stuck in pending state because the pod may have unbound immediate PersistentVolumeClaims. Can be checked with command - <code>oc describe pod podname</code> and  <code>oc get pvc -n namespace</code> shows status of pvc in unbound state.</p>
+</li>
+<li>
+<p>As an example.
+<code>Warning  FailedScheduling  22s (x2 over 22s)  default-scheduler  pod has unbound immediate PersistentVolumeClaims</code>    </p>
+</li>
+</ul>
+<h3 id="how-can-this-be-resolved_4">How can this be resolved?</h3>
+<p>The OCP cluster inspects the persistent volume claim to find the bound volume and mounts that volume for a Pod.  For those persistent volumes that support multiple access modes, you must specify which mode applies when you use the claim as a volume in a Pod, in other words the 'accesModes' mentioned in the persistent volume claim of a given pod must match any existing persistent volume for the pod to be scheduled.</p>
+<p>The claims remain unbound indefinitely if a matching volume does not exist or cannot be created with any available provisioner servicing a storage class.
+ 
+Consider the following PV to be existing on the cluster.</p>
+<p>Persitent volume specification:</p>
+<pre><code>apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv0001 
+spec:
+  capacity:
+    storage: 5Gi 
+  accessModes:
+    - ReadWriteOnce 
+  persistentVolumeReclaimPolicy: Retain
+</code></pre>
+<p>For a pod to be scheduled on a given node in the cluster, the PVC should consist of the following specifications. </p>
+<p>Persistent Volume Claim specifications for a pod:</p>
+<pre><code>kind: PersistentVolumeClaim
+metadata:
+  name: nfs-claim1
+spec:
+  accessModes:
+    - ReadWriteOnce 
+  resources:
+    requests:
+      storage: 5Gi
+</code></pre>
+<h2 id="6-reason-using-host-port">6. Reason: Using host port</h2>
+<hr />
+<pre><code>            Error ==&gt; node(s) didn't have free' ports for the requested pod ports
+</code></pre>
+<ul>
+<li>When a pod uses a 'hostPort' for any of its containers, there are a limited number of places that the pod can be scheduled. The following error would be faced.</li>
+</ul>
+<p><code>Events:  Type     Reason            Age                From               Message  ----     ------            ----               ----               -------  Warning  FailedScheduling  6s (x25 over 34s)  default-scheduler  0/9 nodes are available: 4 node(s) didn't have free ports for the requested pod ports, 7 node(s) didn't match node selector.</code></p>
+<h3 id="how-can-this-be-resolved_5">How can this be resolved?</h3>
+<p>The below command outputs the container ports in all namespaces.</p>
+<p><code>oc get po --all-namespaces -o=jsonpath="{range .items[*]}{.spec.nodeName}{'\t'}{.spec.hostNetwork}{'\t'}{.spec.hostNetwork}{'\t'}{.spec.containers..containerPort}{'\n'}{end}"</code></p>
+<p>Using the above command, the occupied ports for the exisiting containers on all the nodes can be checked and if the port being requested is already occupied, the hostPort for the particular container can be modified in the requested pod configuration to use another port.</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>© Copyright IBM Corp. 2020, 2021</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

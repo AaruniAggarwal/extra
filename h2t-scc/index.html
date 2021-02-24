@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Troubleshoot Security Context Constraints (SCC) - openshift-ppc64le</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="..">openshift-ppc64le</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Home(grown)</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../contrib/" class="nav-link">Contribute</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../actually-helped/" class="nav-link">External</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#troubleshoot-security-context-constraints-scc" class="nav-link">Troubleshoot Security Context Constraints (SCC)</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#initial-diagnosis" class="nav-link">Initial Diagnosis</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#sample-issue" class="nav-link">Sample Issue</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#what-is-scc" class="nav-link">What is SCC?</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#1-supplemental-groups" class="nav-link">1. Supplemental Groups</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#2-fsgroup" class="nav-link">2. fsGroup</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#3-runasuser" class="nav-link">3. runAsUser</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#4-selinuxoptions" class="nav-link">4. seLinuxOptions</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="troubleshoot-security-context-constraints-scc">Troubleshoot Security Context Constraints (SCC)</h1>
+<p>This document contains information regarding troubleshooting SCC related issues. 
+Document includes the initial diagnosis step which helps find the actual error.
+To solve the SCC related issues, you need a basic understanding of the SCC, and we will explain what SCC is along with its role in the cluster. </p>
+<h2 id="initial-diagnosis">Initial Diagnosis</h2>
+<ul>
+<li>
+<p>$ <code>oc describe pod &lt;pod-name&gt; | grep scc</code>
+    This command show type of SCC used in the pod deployment. 
+    Knowing  SCC name will let us know about control permissions for a pod. 
+    These permissions include actions that a pod, a collection of containers, can perform, and what resources it can access.  </p>
+</li>
+<li>
+<p>$ <code>oc describe scc &lt;scc-name&gt;</code>
+    Examine the pod SCC using the above command. 
+    The command output consists of permissions include actions that a pod, a collection of containers, can perform, and what resources it can access.</p>
+</li>
+</ul>
+<h3 id="sample-issue">Sample Issue</h3>
+<p>The pod was unable to mount the host volume due to user doesn't have right permissions.
+The error is pasted below. </p>
+<p>Error:</p>
+<pre><code class="language-text">
+  | CAUSE: current user doesn't have permissions for writing to /var/lib/mongodb/data directory
+  | DETAILS: current user id = 184, user groups: 997 0
+  | DETAILS: directory permissions: drwxrwsr-x owned by 0:1000360000, SELinux: system_u:object_r:svirt_sandbox_file_t:s0:c9,c19
+</code></pre>
+<p>Solution: <br />
+Allowing access to SCCs with a RunAsAny FSGroup strategy can prevent users from accessing their block devices. 
+Pods need to specify a fsGroup in order to take over their block devices. 
+Normally, this is done when the SCC FSGroup strategy is set to MustRunAs. 
+If a user’s pod is assigned an SCC with a RunAsAny FSGroup strategy, then the user may face permission denied errors until they discover that they need to specify a fsGroup themselves.
+To solve the error first need to find out the scc type used by the pod then edit the SCC according to your pod requirement or change the SCC type.
+Editing the current SCC and add FSGroup to MustRunAs  </p>
+<p>$ <code>oc edit scc &lt;scc-name&gt;</code><br />
+Edit the SCC using this command. 
+You can edit SCC to define a set of conditions that a pod must run with in order to be accepted into the system.<br />
+FSGroup Strategy: RunAsAny</p>
+<h2 id="what-is-scc">What is SCC?</h2>
+<p>SCC is basically used for pod restriction, which means it defines the limitations for a pod, as in what actions it can perform and what all things it can access in the cluster.</p>
+<p>Advantages of using SCC.</p>
+<ul>
+<li>Host directories can be used as volumes.</li>
+<li>Able can set conditions for container user ID and Selinux Context of the container.</li>
+<li>Able to run containers as privileged.</li>
+<li>Able to control the use of host namespaces and networking.</li>
+<li>Able to control usage of volume types.</li>
+<li>Able to control capabilities that a container can request.</li>
+<li>FSGroup can be allocated to pod volumes.</li>
+</ul>
+<p>OpenShift provides a set of predefined SCC that can be used, modified, and extended by the administrator.</p>
+<pre><code class="language-text">$ oc get scc 
+NAME              PRIV   CAPS  HOSTDIR  SELINUX    RUNASUSER         FSGROUP   SUPGROUP  PRIORITY
+anyuid            false   []   false    MustRunAs  RunAsAny          RunAsAny  RunAsAny  
+hostaccess        false   []   true     MustRunAs  MustRunAsRange    RunAsAny  RunAsAny  
+hostmount-anyuid  false   []   true     MustRunAs  RunAsAny          RunAsAny  RunAsAny
+nonroot           false   []   false    MustRunAs  MustRunAsNonRoot  RunAsAny  RunAsAny 
+privileged        true    []   true     RunAsAny   RunAsAny          RunAsAny  RunAsAny
+restricted        false   []   false    MustRunAs  MustRunAsRange    RunAsAny  RunAsAny
+</code></pre>
+<p>If one wishes to use any pre-defined scc, that can be done by simply adding the user or the group to the scc group.</p>
+<p>$ <code>oadm policy add-user-to-scc &lt;scc_name&gt; &lt;user_name&gt;</code></p>
+<p>$ <code>oadm policy add-group-to-scc &lt;scc_name&gt; &lt;group_name&gt;</code></p>
+<p>OpenShift guarantees that the capabilities required by a container are granted to the user that executes the container at admission time.  We can not allow any container to get access to unnecessary capabilities or to run in an insecure way (e.g. privileged or as root)</p>
+<p>Adding a regular user or to a group given access to the SCC allows them to run privileged pods. There are mainly four section in SCC to control access to volumes in OpenShift.</p>
+<ol>
+<li>Supplemental Groups</li>
+<li>fsGroup</li>
+<li>runAsUser</li>
+<li>seLinuxOptions</li>
+</ol>
+<h3 id="1-supplemental-groups">1. Supplemental Groups</h3>
+<p>Supplemental groups are regular Linux groups. 
+When a process runs in the system, it runs with a user ID and group ID. 
+These groups are used for controlling access to shared storage.</p>
+<ul>
+<li>Check the NFS mount using the following command.</li>
+</ul>
+<pre><code class="language-text">   # showmount -e &lt;nfs-server-ip-or-hostname&gt;
+   Export list for f21-nfs.vm: 
+   /opt/nfs * 
+</code></pre>
+<ul>
+<li>Check NFS details on the mount server using the following command.</li>
+</ul>
+<pre><code class="language-text">   # cat /etc/exports 
+   /opt/nfs *(rw,sync,no_root_squash)
+</code></pre>
+<ul>
+<li>Check owner of exported directory</li>
+</ul>
+<pre><code class="language-text">   $ ls -lZ /opt/nfs -d
+   drwxrws---. nfsnobody 2325 unconfined_u:object_r:usr_t:s0 /opt/nfs
+
+   $ id nfsnobody
+   uid = 65534(nfsnobody) gid = 454265(nfsnobody) groups = 454265(nfsnobody)
+</code></pre>
+<p>The <code>/opt/nfs/</code> export is accessible by UID 454265 and the group 2325.     </p>
+<pre><code class="language-text">apiVersion: v1
+kind: Pod
+...
+spec:
+   containers:
+   - name: ...
+      volumeMounts:
+      - name: nfs
+         mountPath: /usr/share/...
+   securityContext:
+      supplementalGroups: [2325]
+   volumes:
+   - name: nfs
+      nfs:
+      server: &lt;nfs_server_ip_or_host&gt;
+      path: /opt/nfs
+</code></pre>
+<h3 id="2-fsgroup">2. fsGroup</h3>
+<p>fsGroup stands for the file system group which is used for adding container supplemental groups. 
+Supplement group ID is used for shared storage and fsGroup is used for block storage.</p>
+<pre><code class="language-text">kind: Pod
+spec:
+   containers:
+   - name: ...
+   securityContext:
+      fsGroup: 2325
+</code></pre>
+<h3 id="3-runasuser">3. runAsUser</h3>
+<p>runAsUser uses the user ID for communication. 
+This is used in defining the container image in pod definition. A single ID user can be used in all containers, if required.
+While running the container, the defined ID is matched with the owner ID on the export. 
+If the specified ID is defined outside, then it becomes global to all the containers in the pod. 
+If it is defined with a specific pod, then it becomes specific to a single container.</p>
+<pre><code class="language-text">spec:
+   containers:
+   - name: ...
+      securityContext:
+         runAsUser: 454265
+</code></pre>
+<h3 id="4-selinuxoptions">4. seLinuxOptions</h3>
+<p>SELinux default when not defined in the pod definition or in the SCC. 
+Level can be defined globally for the entire pod, or individually for each container.
+SElinux values, policies and values given below</p>
+<p>values: 1.Enforcing 2.permissive 3.disabled</p>
+<p>policies:1.targeted 2.minimum 3.mls(multilevel)</p>
+<p>components:</p>
+<ol>
+<li>Selinux user</li>
+<li>Selinux role</li>
+<li>Type</li>
+<li>Sensitivity / category</li>
+</ol>
+<pre><code class="language-text">spec:
+  container:
+     seLinuxContext: 
+        type: MustRunAs
+        SELinuxOptions: 
+           user: &lt;selinux-user-name&gt;
+           role: ...
+           type: ...
+           level: ...
+</code></pre></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>© Copyright IBM Corp. 2020, 2021</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
