@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>PowerVS Frequently Asked Questions - openshift-ppc64le</title>
+        <title>Powervs faq - openshift-ppc64le</title>
         <link href="../css/bootstrap.min.css" rel="stylesheet">
         <link href="../css/font-awesome.min.css" rel="stylesheet">
         <link href="../css/base.css" rel="stylesheet">
@@ -68,20 +68,8 @@
     <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
         <ul class="nav flex-column">
             
-            <li class="nav-item" data-level="1"><a href="#powervs-frequently-asked-questions" class="nav-link">PowerVS Frequently Asked Questions</a>
+            <li class="nav-item" data-level="3"><a href="#this-page-has-moved-to-httpsocp-power-automationgithubioocp-powervm-faqdocspowervs-faq-where-all-future-updates-will-be-made-please-update-your-bookmark-thanks" class="nav-link">This page has moved to https://ocp-power-automation.github.io/ocp-powervm-faq/docs/powervs-faq/ where all future updates will be made. Please update your bookmark. Thanks!!</a>
               <ul class="nav flex-column">
-            <li class="nav-item" data-level="2"><a href="#when-building-out-a-cluster" class="nav-link">When Building out a Cluster</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#problems-on-a-running-cluster" class="nav-link">Problems on a Running Cluster</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#securing-a-cluster" class="nav-link">Securing a Cluster</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
               </ul>
             </li>
         </ul>
@@ -89,33 +77,7 @@
 </div></div>
                     <div class="col-md-9" role="main">
 
-<h1 id="powervs-frequently-asked-questions">PowerVS Frequently Asked Questions</h1>
-<hr />
-<h2 id="when-building-out-a-cluster">When Building out a Cluster</h2>
-<h4 id="vm-console-shows-grub">VM Console shows "grub&gt;"</h4>
-<p>Not the end of the world. Just type <code>normal</code> and hit ENTER.</p>
-<h4 id="vm-console-shows-grub-rescue">VM Console shows "grub rescue&gt;"</h4>
-<p>GRUB 2 was unable to find the grub folder or its contents are missing/corrupted. The grub folder contains the GRUB 2 menu, modules and stored environmental data. This should not happen very often. Simply reboot the VM from <a href="https://cloud.ibm.com">https://cloud.ibm.com</a>.</p>
-<h4 id="rhcos-ignition-stalls-with-version-mismatch">RHCOS Ignition stalls with "version mismatch"</h4>
-<p>The version of RHCOS you are booting up with on cluster nodes cannot handle what the OCP build/version is serving as config for cluster nodes. Make sure they match at least the major and minor versions (eg. 4.5) in your <code>var.tfvars</code> file.</p>
-<h4 id="error-about-auth-keytoken">Error about auth key/token</h4>
-<pre><code class="language-text">Error: Error occured while fetching the auth key for power iaas: &quot;Post https://iam.cloud.ibm.com/identity/token: dial tcp: lookup iam.cloud.ibm.com on 192.168.2.1:53: read udp 192.168.2.25:49597-&gt;192.168.2.1:53: i/o timeout&quot;
-</code></pre>
-<p>You may occasionally get this error upon <code>terraform apply</code> runs. One thing you can try is to regenerate IBM Cloud API key and rerun with it. See: <a href="https://cloud.ibm.com/docs/account?topic=account-userapikey">https://cloud.ibm.com/docs/account?topic=account-userapikey</a></p>
-<h4 id="image-registry-not-coming-up">Image Registry not coming up</h4>
-<p>Toward the end of deploying a cluster or even after your <code>terraform apply</code> appears to complete happily, you might find your <code>image-registry</code> operator not AVAILABLE. Digging in, if you find the <code>registry-pvc</code> PersistentVolumeClaim stuck in Pending state, while <code>nfs-client-provisioner</code> pod appears to be Running fine, it may be the case where the backing NFS share is read-only, and thus PVCs can't be fulfilled. Check the directory ownership and permission of <code>/export</code> on your bastion node. It has to be owned by "nobody" and world writeable. Use below commands as necessary;</p>
-<pre><code class="language-text"># chown nobody:nobody /export
-# chmod 777 /export
-# exportfs -r
-</code></pre>
-<p>Note: allow a few minutes to sort all things out after these commands.</p>
-<hr />
-<h2 id="problems-on-a-running-cluster">Problems on a Running Cluster</h2>
-<h4 id="need-to-add-more-cpumemory-to-node">Need to add more CPU/Memory to Node</h4>
-<p>Go to <a href="https://cloud.ibm.com">https://cloud.ibm.com</a>, then to your PowerVS service instance, find your VM that backs the cluster Node (eg. myocp-worker-0), click to open up the details page, then "Edit details," update the CPU/Memory with new values, and Save. You should get "Edit successful" message, and your OCP cluster should recognize the change and start showing in Compute section of Web Console. If something fails along the way, try "OS Shutdown" action, edit CPU/Memory as necessary while in "Shutoff" state, and restart the VM.</p>
-<hr />
-<h2 id="securing-a-cluster">Securing a Cluster</h2>
-<h4 id="tba">TBA</h4></div>
+<h3 id="this-page-has-moved-to-httpsocp-power-automationgithubioocp-powervm-faqdocspowervs-faq-where-all-future-updates-will-be-made-please-update-your-bookmark-thanks">This page has moved to <a href="https://ocp-power-automation.github.io/ocp-powervm-faq/docs/powervs-faq/">https://ocp-power-automation.github.io/ocp-powervm-faq/docs/powervs-faq/</a> where all future updates will be made. Please update your bookmark. Thanks!!</h3></div>
             </div>
         </div>
 

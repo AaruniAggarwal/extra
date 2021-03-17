@@ -120,9 +120,11 @@
           labels:
 </code></pre>
 <p><strong>2. Run the <code>deploy.sh</code> script to start deployment :</strong> </p>
-<p><code>$ ./deploy.sh -c openshift</code></p>
-<p><strong><em>Sample output:</em></strong></p>
-<pre><code class="language-text">###  Installing kruize for OpenShift
+<pre><code class="language-text">$ ./deploy.sh -c openshift
+
+Sample output:
+
+###  Installing kruize for OpenShift
 
 
 WARNING: This will create a Kruize ServiceMonitor object in the openshift-monitoring namespace
@@ -165,10 +167,9 @@ If that's the case, you can build your own power(ppc64le) image by using <code>b
 But before running <code>./build.sh</code> make sure you have docker installed on your system .</p>
 </blockquote>
 <p><strong>3. Once the deployment is complete, create a route in order to access the Kruize API</strong></p>
-<ul>
-<li>$ cat route.yaml</li>
-</ul>
-<pre><code class="language-text">kind: Route
+<pre><code class="language-text">$ cat route.yaml
+
+kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
   name: kruize
@@ -205,8 +206,9 @@ status:
 </ul>
 <p>$ curl http://&lt;<code>host_of_your_cluster</code>&gt;/recommendations?listApplications </p>
 <p><em>Example</em>: </p>
-<p>[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?listApplications</p>
-<pre><code class="language-text">[
+<pre><code class="language-text">[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?listApplications
+
+[
   {
     &quot;application_name&quot;: &quot;kube-state-metrics&quot;,
     &quot;resources&quot;: {
@@ -281,9 +283,9 @@ status:
 <ul>
 <li>List recommendations for single application:</li>
 </ul>
-<p>$ curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=kruize</p>
-<p>Output : </p>
-<pre><code class="language-text">[
+<pre><code class="language-text">$ curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=kruize
+
+[
  {
     &quot;application_name&quot;: &quot;kruize&quot;,
     &quot;resources&quot;: {
@@ -306,8 +308,9 @@ status:
 <p>NS stands for namespace name</p>
 <h3 id="examples">Examples</h3>
 <h5 id="1-to-monitor-deployment-for-an-acmeair-application">1. To monitor deployment for an acmeair application:</h5>
-<p>* [root@kruize-inf ~]# git clone https://github.ibm.com/powercloud/acmeair.git</p>
-<pre><code class="language-text">Cloning into 'acmeair'...
+<pre><code class="language-text">[root@kruize-inf ~]# git clone https://github.ibm.com/powercloud/acmeair.git
+
+Cloning into 'acmeair'...
 remote: Enumerating objects: 31, done.
 remote: Total 31 (delta 0), reused 0 (delta 0), pack-reused 31
 Unpacking objects: 100% (31/31), done.
@@ -388,8 +391,9 @@ acmeair-mainservice-7f7ff489d-qhss7       1/1     Running   0   �
 <ul>
 <li>List recommendations: </li>
 </ul>
-<p>[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=acmeair-customer-db</p>
-<pre><code class="language-text">[
+<pre><code class="language-text">[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=acmeair-customer-db
+
+[
   {
     &quot;application_name&quot;: &quot;acmeair-customer-db&quot;,
     &quot;resources&quot;: {
@@ -413,8 +417,9 @@ acmeair-mainservice-7f7ff489d-qhss7       1/1     Running   0   �
 <p>curl http://acmeair.apps.kruize.cp.fyre.ibm.com:6443/flight/loader/load</p>
 <p>curl http://acmeair.apps.kruize.cp.fyre.ibm.com:6443/customer/loader/load?numCustomers=100000 </p>
 <p><strong>To list recommendations for single application:</strong> </p>
-<p>[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=acmeair-customer-db</p>
-<pre><code class="language-text">[
+<pre><code class="language-text">[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=acmeair-customer-db
+
+[
   {
     &quot;application_name&quot;: &quot;acmeair-customer-db&quot;,
     &quot;resources&quot;: {
@@ -431,8 +436,9 @@ acmeair-mainservice-7f7ff489d-qhss7       1/1     Running   0   �
 ]
 </code></pre>
 <p><strong>List of recommendations on all the applications:</strong>  </p>
-<p>[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?listApplications</p>
-<pre><code class="language-text">[
+<pre><code class="language-text">[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?listApplications
+
+[
   {
     &quot;application_name&quot;: &quot;kube-state-metrics&quot;,
     &quot;resources&quot;: {
@@ -514,8 +520,9 @@ acmeair-mainservice-7f7ff489d-qhss7       1/1     Running   0   �
 ]
 </code></pre>
 <h5 id="2-to-monitor-osd-pod-in-openshift-container-storage">2. To monitor <strong>osd</strong> pod in Openshift Container Storage:</h5>
-<p>[root@kruize-inf ~]# oc get pods -n openshift-storage |grep osd</p>
-<pre><code class="language-text">NAME                                                              READY   STATUS      RESTARTS   AGE
+<pre><code class="language-text">[root@kruize-inf ~]# oc get pods -n openshift-storage |grep osd
+
+NAME                                                              READY   STATUS      RESTARTS   AGE
 rook-ceph-osd-0-6499496d58-pwml8                                  1/1     Running     0          12m
 rook-ceph-osd-1-5bd4d44b6f-dd6nq                                  1/1     Running     22         2d15h
 rook-ceph-osd-2-655f579dc7-65c7p                                  1/1     Running     0          141m
@@ -528,8 +535,9 @@ rook-ceph-osd-2-655f579dc7-65c7p                                  1/1     Runnin
 <li>View Recommendations: </li>
 </ul>
 <p><strong>Before adding load:</strong>  </p>
-<p>[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=rook-ceph-osd-1</p>
-<pre><code class="language-text">[
+<pre><code class="language-text">[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=rook-ceph-osd-1
+
+[
   {
     &quot;application_name&quot;: &quot;rook-ceph-osd-1&quot;,
     &quot;resources&quot;: {
@@ -546,8 +554,9 @@ rook-ceph-osd-2-655f579dc7-65c7p                                  1/1     Runnin
 ]
 </code></pre>
 <p><strong>After running some tests/adding load:</strong>  </p>
-<p>[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=rook-ceph-osd-1</p>
-<pre><code class="language-text">[
+<pre><code class="language-text">[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=rook-ceph-osd-1
+
+[
   {
     &quot;application_name&quot;: &quot;rook-ceph-osd-1&quot;,
     &quot;resources&quot;: {
