@@ -201,8 +201,8 @@ status:
 <li>Run: <code>oc create -f route.yaml</code></li>
 </ul>
 <h5 id="4-use-the-api-to-view-recommendations">4. Use the API to view recommendations</h5>
-<p>List recommendations for all applications by doing :</p>
-<p>$ curl http://&lt;<code>host_of_your_cluster</code>&gt;/recommendations?listApplications </p>
+<p>List recommendations for all applications by running the following command :</p>
+<p><code>$ curl http://&lt;</code>host_of_your_cluster<code>&gt;/recommendations?listApplications</code> </p>
 <p><em>Example</em>: </p>
 <pre><code class="language-text">[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?listApplications
 
@@ -299,7 +299,7 @@ status:
    }
 ]
 </code></pre>
-<h4 id="5-label-the-pod-to-monitor-your-application">5. Label the pod to monitor your application:</h4>
+<h5 id="5-label-the-pod-to-monitor-your-application">5. Label the pod to monitor your application:</h5>
 <p>Kruize by default monitors <code>openshift-monitoring</code> namespace. In order to monitor your application, run the following command:</p>
 <pre><code class="language-text">$ oc label pod -n &lt;NS&gt; &lt;POD_NAME&gt; app.kubernetes.io/name=&lt;ANY_NAME&gt;
 </code></pre>
