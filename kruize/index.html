@@ -97,7 +97,7 @@
 <p><strong><em>NOTE:</em></strong> It is recommended to run the pods that are being monitored by kruize with no requests and limits set (or with very high limits set). This helps kruize to understand what is the real usage and hence can recommend the right set of values.</p>
 </blockquote>
 <h3 id="steps-for-deploying-kruize-on-ibm-power-systems">Steps for deploying kruize on IBM Power Systems</h3>
-<p><strong>1. Clone the kruize github repository :</strong></p>
+<h4 id="1-clone-the-kruize-github-repository">1. Clone the kruize github repository :</h4>
 <p><code>$ git clone https://github.com/kruize/kruize.git</code> </p>
 <p><code>$ cd kruize</code></p>
 <p>Now make the following changes in <strong>manifests/kruize.yaml_template</strong></p>
@@ -119,7 +119,7 @@
         metadata:
           labels:
 </code></pre>
-<p><strong>2. Run the <code>deploy.sh</code> script to start deployment :</strong> </p>
+<h4 id="2-run-the-deploysh-script-to-start-deployment">2. Run the <code>deploy.sh</code> script to start deployment :</h4>
 <pre><code class="language-text">$ ./deploy.sh -c openshift
 
 Sample output:
@@ -166,7 +166,7 @@ If log says execution format error then the image would be of some other archite
 If that's the case, you can build your own power(ppc64le) image by using <code>build.sh</code> script present <a href="https://github.com/kruize/kruize/blob/master/build.sh">here</a> 
 But before running <code>./build.sh</code> make sure you have docker installed on your system .</p>
 </blockquote>
-<p><strong>3. Once the deployment is complete, create a route in order to access the Kruize API</strong></p>
+<h4 id="3-once-the-deployment-is-complete-create-a-route-in-order-to-access-the-kruize-api">3. Once the deployment is complete, create a route in order to access the Kruize API</h4>
 <pre><code class="language-text">$ cat route.yaml
 
 kind: Route
@@ -200,10 +200,8 @@ status:
 <ul>
 <li>Run: <code>oc create -f route.yaml</code></li>
 </ul>
-<p><strong>4. Use the API to view recommendations</strong> </p>
-<ul>
-<li>List recommendations for all applications by doing :</li>
-</ul>
+<h4 id="4-use-the-api-to-view-recommendations">4. Use the API to view recommendations</h4>
+<p>List recommendations for all applications by doing :</p>
 <p>$ curl http://&lt;<code>host_of_your_cluster</code>&gt;/recommendations?listApplications </p>
 <p><em>Example</em>: </p>
 <pre><code class="language-text">[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?listApplications
@@ -301,7 +299,7 @@ status:
    }
 ]
 </code></pre>
-<p><strong>5. Label the pod to monitor your application:</strong> </p>
+<h4 id="5-label-the-pod-to-monitor-your-application">5. Label the pod to monitor your application:</h4>
 <p>Kruize by default monitors <code>openshift-monitoring</code> namespace. In order to monitor your application, run the following command:</p>
 <pre><code class="language-text">$ oc label pod -n &lt;NS&gt; &lt;POD_NAME&gt; app.kubernetes.io/name=&lt;ANY_NAME&gt;
 </code></pre>
@@ -386,8 +384,8 @@ acmeair-mainservice-7f7ff489d-qhss7       1/1     Running   0   �
 <li>In order to monitor your application, label the pod as mentioned in Step5:</li>
 </ul>
 <pre><code>[root@kruize-inf acmeair]# oc label pod -n acme acmeair-customer-db-ff6bcc8fc-qzxxp app.kubernetes.io/name=acmeair-customer-db
+pod/acmeair-customer-db-ff6bcc8fc-qzxxp labeled
 </code></pre>
-<p>pod/acmeair-customer-db-ff6bcc8fc-qzxxp labeled</p>
 <ul>
 <li>List recommendations: </li>
 </ul>
@@ -531,6 +529,7 @@ rook-ceph-osd-2-655f579dc7-65c7p                                  1/1     Runnin
 <li>Label the osd pod which you want to monitor: </li>
 </ul>
 <pre><code>[root@kruize-inf ~]# oc label pod rook-ceph-osd-1-5bd4d44b6f-dd6nq -n openshift-storage app.kubernetes.io/name=rook-ceph-osd-1
+pod/rook-ceph-osd-1-5bd4d44b6f-dd6nq labeled
 </code></pre>
 <ul>
 <li>View Recommendations: </li>
