@@ -201,7 +201,7 @@ status:
 <li>Run: <code>oc create -f route.yaml</code></li>
 </ul>
 <h4 id="4-use-the-api-to-view-recommendations">4. Use the API to view recommendations</h4>
-<p><strong><em>List recommendations for all applications by running the following command :</em></strong></p>
+<p><em>List recommendations for all applications by running the following command :</em></p>
 <p><code>$ curl http://&lt;host_of_your_cluster&gt;/recommendations?listApplications</code> </p>
 <p><em>Example</em>: </p>
 <pre><code class="language-text">[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?listApplications
@@ -278,7 +278,7 @@ status:
 <blockquote>
 <p><em>NOTE:</em> This is initial output before adding any load on application, and it shows all applications that are deployed in <code>openshift-monitoring</code> namespace because Kruize is also deployed in this namespace.</p>
 </blockquote>
-<p><strong><em>List recommendations for single application:</em></strong></p>
+<p><em>List recommendations for single application:</em></p>
 <pre><code class="language-text">$ curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=kruize
 
 [
