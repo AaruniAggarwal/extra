@@ -304,23 +304,23 @@ status:
 <p>NS stands for namespace name</p>
 <h3 id="examples">Examples</h3>
 <h5 id="1-to-monitor-deployment-for-an-acmeair-application">1. To monitor deployment for an acmeair application:</h5>
-<pre><code class="language-text">[root@kruize-inf ~]# git clone https://github.ibm.com/powercloud/acmeair.git
+<pre><code class="language-text">[aar@kruize-inf ~]$ git clone https://github.ibm.com/powercloud/acmeair.git
 
 Cloning into 'acmeair'...
 remote: Enumerating objects: 31, done.
 remote: Total 31 (delta 0), reused 0 (delta 0), pack-reused 31
 Unpacking objects: 100% (31/31), done.
 
-[root@kruize-inf ~]# cd acmeair/
-[root@kruize-inf ~]# git checkout powervs
+[aar@kruize-inf ~]$ cd acmeair/
+[aar@kruize-inf ~]$ git checkout powervs
 
 Branch 'powervs' set up to track remote branch 'powervs' from 'origin'.
 Switched to a new branch 'powervs'
 
-[root@kruize-inf acmeair]# ls
+[aar@kruize-inf acmeair]$ ls
 acmeair.PNG  deploy.sh  openshift-manifest  README.md
 
-[root@kruize-inf acmeair]# ./deploy.sh
+[aar@kruize-inf acmeair]$ ./deploy.sh
 
 Route Host=acmeair.apps.kruize.cp.fyre.ibm.com
 Now using project &quot;acme&quot; on server &quot;https://api.kruize.cp.fyre.ibm.com:6443&quot;.
@@ -367,7 +367,7 @@ deployment.apps/acmeair-mainservice created
 service/acmeair-main-service created
 Acme Air Deployment complete. Access the application at acmeair.apps.kruize.cp.fyre.ibm.com/acmeair
 
-[root@kruize-inf acmeair]# oc get pods
+[aar@kruize-inf acmeair]$ oc get pods
 NAME                                       READY   STATUS    RESTARTS   AGE
 acmeair-authservice-55648d8445-4k4r4       1/1     Running   0          57m
 acmeair-booking-db-6ffc689d55-kxs9r        1/1     Running   0          57m
@@ -381,13 +381,13 @@ acmeair-mainservice-7f7ff489d-qhss7       1/1     Running   0   �
 <ul>
 <li>In order to monitor your application, label the pod as mentioned in Step5:</li>
 </ul>
-<pre><code>[root@kruize-inf acmeair]# oc label pod -n acme acmeair-customer-db-ff6bcc8fc-qzxxp app.kubernetes.io/name=acmeair-customer-db
+<pre><code class="language-text">[aar@kruize-inf acmeair]$ oc label pod -n acme acmeair-customer-db-ff6bcc8fc-qzxxp app.kubernetes.io/name=acmeair-customer-db
 pod/acmeair-customer-db-ff6bcc8fc-qzxxp labeled
 </code></pre>
 <ul>
 <li>List recommendations: </li>
 </ul>
-<pre><code class="language-text">[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=acmeair-customer-db
+<pre><code class="language-text">[aar@kruize-inf acmeair]$ curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=acmeair-customer-db
 
 [
   {
@@ -413,7 +413,7 @@ pod/acmeair-customer-db-ff6bcc8fc-qzxxp labeled
 <p>curl http://acmeair.apps.kruize.cp.fyre.ibm.com:6443/flight/loader/load</p>
 <p>curl http://acmeair.apps.kruize.cp.fyre.ibm.com:6443/customer/loader/load?numCustomers=100000 </p>
 <p><strong>To list recommendations for single application:</strong> </p>
-<pre><code class="language-text">[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=acmeair-customer-db
+<pre><code class="language-text">[aar@kruize-inf acmeair]$ curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=acmeair-customer-db
 
 [
   {
@@ -432,7 +432,7 @@ pod/acmeair-customer-db-ff6bcc8fc-qzxxp labeled
 ]
 </code></pre>
 <p><strong>List of recommendations on all the applications:</strong>  </p>
-<pre><code class="language-text">[root@kruize-inf acmeair]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?listApplications
+<pre><code class="language-text">[aar@kruize-inf acmeair]$ curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?listApplications
 
 [
   {
@@ -516,7 +516,7 @@ pod/acmeair-customer-db-ff6bcc8fc-qzxxp labeled
 ]
 </code></pre>
 <h5 id="2-to-monitor-osd-pod-in-openshift-container-storage">2. To monitor <strong>osd</strong> pod in Openshift Container Storage:</h5>
-<pre><code class="language-text">[root@kruize-inf ~]# oc get pods -n openshift-storage |grep osd
+<pre><code class="language-text">[aar@kruize-inf ~]$ oc get pods -n openshift-storage |grep osd
 
 NAME                                                              READY   STATUS      RESTARTS   AGE
 rook-ceph-osd-0-6499496d58-pwml8                                  1/1     Running     0          12m
@@ -526,14 +526,14 @@ rook-ceph-osd-2-655f579dc7-65c7p                                  1/1     Runnin
 <ul>
 <li>Label the osd pod which you want to monitor: </li>
 </ul>
-<pre><code>[root@kruize-inf ~]# oc label pod rook-ceph-osd-1-5bd4d44b6f-dd6nq -n openshift-storage app.kubernetes.io/name=rook-ceph-osd-1
+<pre><code class="language-text">[aar@kruize-inf ~]$ oc label pod rook-ceph-osd-1-5bd4d44b6f-dd6nq -n openshift-storage app.kubernetes.io/name=rook-ceph-osd-1
 pod/rook-ceph-osd-1-5bd4d44b6f-dd6nq labeled
 </code></pre>
 <ul>
 <li>View Recommendations: </li>
 </ul>
 <p><strong>Before adding load:</strong>  </p>
-<pre><code class="language-text">[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=rook-ceph-osd-1
+<pre><code class="language-text">[aar@kruize-inf ~]$ curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=rook-ceph-osd-1
 
 [
   {
@@ -552,7 +552,7 @@ pod/rook-ceph-osd-1-5bd4d44b6f-dd6nq labeled
 ]
 </code></pre>
 <p><strong>After running some tests/adding load:</strong>  </p>
-<pre><code class="language-text">[root@kruize-inf ~]# curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=rook-ceph-osd-1
+<pre><code class="language-text">[aar@kruize-inf ~]$ curl http://kruize-openshift-monitoring.apps.kruize.cp.fyre.ibm.com/recommendations?application_name=rook-ceph-osd-1
 
 [
   {
